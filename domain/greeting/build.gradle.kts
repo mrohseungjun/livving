@@ -1,12 +1,10 @@
 plugins {
     id("livving.kotlin.multiplatform.library")
+    id("livving.koin.core")
 }
 
 kotlin {
     sourceSets {
-        commonMain.dependencies {
-            implementation(projects.data.greeting)
-        }
         jvmTest.dependencies {
             implementation(libs.kotlin.test)
         }

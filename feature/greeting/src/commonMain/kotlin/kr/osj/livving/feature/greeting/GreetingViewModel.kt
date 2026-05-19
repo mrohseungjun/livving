@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class GreetingViewModel(
-    private val getGreetingUseCase: GetGreetingUseCase = GetGreetingUseCase(),
+    private val getGreetingUseCase: GetGreetingUseCase,
 ) {
     private val _state = MutableStateFlow(GreetingState())
     val state: StateFlow<GreetingState> = _state.asStateFlow()

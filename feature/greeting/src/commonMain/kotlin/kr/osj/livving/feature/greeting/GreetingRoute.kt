@@ -3,11 +3,11 @@ package kr.osj.livving.feature.greeting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import org.koin.compose.koinInject
 
 @Composable
 fun GreetingRoute(
-    viewModel: GreetingViewModel = remember { GreetingViewModel() },
+    viewModel: GreetingViewModel = koinInject(),
 ) {
     val state by viewModel.state.collectAsState()
 

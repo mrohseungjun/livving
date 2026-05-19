@@ -33,6 +33,7 @@ dependencyResolutionManagement {
 include(":composeApp")
 include(":core:platform")
 include(":core:ui")
+include(":data:network")
 include(":data:greeting")
 include(":domain:greeting")
 include(":feature:greeting")
