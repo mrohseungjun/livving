@@ -42,6 +42,7 @@ graph TD
     feature_main --> feature_relations[feature:relations]
     feature_main --> feature_notifications[feature:notifications]
     feature_main --> feature_settings[feature:settings]
+    feature_main --> feature_splash[feature:splash]
     feature_main --> domain_livving
     feature_main --> core_ui
 
@@ -52,6 +53,7 @@ graph TD
     feature_relations --> domain_livving
     feature_notifications --> core_ui
     feature_settings --> core_ui
+    feature_splash --> core_ui
 
     data_network[data:network]
 ```
@@ -70,6 +72,7 @@ graph TD
 - [`feature/relations`](./feature/relations/src): 보호자, 초대, 보호 중인 사용자 화면을 담당합니다.
 - [`feature/notifications`](./feature/notifications/src): 알림, 안부 미확인 상세, 보호자 요청 화면을 담당합니다.
 - [`feature/settings`](./feature/settings/src): 설정, 알림 흐름, 프로필, 개인정보, 안부 기록 화면을 담당합니다.
+- [`feature/splash`](./feature/splash/src): Android/iOS 공통 스플래시 화면과 진입 타이머 상태를 담당합니다.
 - [`iosApp`](./iosApp/iosApp): iOS 애플리케이션 엔트리포인트를 담당합니다.
 
 ## 의존성 방향
@@ -89,6 +92,7 @@ feature:main
  ├─ feature:relations
  ├─ feature:notifications
  ├─ feature:settings
+ ├─ feature:splash
  ├─ domain:livving
  └─ core:ui
 

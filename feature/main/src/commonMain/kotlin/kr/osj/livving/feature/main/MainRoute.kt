@@ -36,6 +36,7 @@ import kr.osj.livving.feature.settings.ScheduleScreen
 import kr.osj.livving.feature.settings.SettingsScreen
 import kr.osj.livving.feature.setup.DeadlineScreen
 import kr.osj.livving.feature.setup.DelayScreen
+import kr.osj.livving.feature.splash.SplashScreen
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
@@ -44,6 +45,7 @@ import org.koin.compose.viewmodel.koinViewModel
 private val mainNavigationStateConfiguration = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
+            subclass(MainRoute.Splash.serializer())
             subclass(MainRoute.Login.serializer())
             subclass(MainRoute.Terms.serializer())
             subclass(MainRoute.SetupDeadline.serializer())
@@ -72,12 +74,11 @@ fun MainRoute(
     viewModel: MainViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
-    val backStack = rememberNavBackStack(mainNavigationStateConfiguration, MainRoute.Login)
+    val backStack = rememberNavBackStack(mainNavigationStateConfiguration, MainRoute.Splash)
 
     MainScreen(
         state = state,
         backStack = backStack,
-        currentRoute = backStack.lastOrNull() as? MainRoute ?: MainRoute.Login,
         onIntent = viewModel::onIntent,
         onNavigate = { route -> backStack.navigateTo(route) },
         onReplace = { route -> backStack.replaceWith(route) },
@@ -89,14 +90,135 @@ fun MainRoute(
 fun MainScreen(
     state: MainState,
     backStack: List<NavKey>,
-    currentRoute: MainRoute,
     onIntent: (MainIntent) -> Unit,
     onNavigate: (MainRoute) -> Unit,
     onReplace: (MainRoute) -> Unit,
     onBack: () -> Unit,
 ) {
+    MainNavDisplay(
+        state = state,
+        backStack = backStack,
+        onIntent = onIntent,
+        onNavigate = onNavigate,
+        onReplace = onReplace,
+        onBack = onBack,
+    )
+}
+
+@Composable
+private fun MainNavDisplay(
+    state: MainState,
+    backStack: List<NavKey>,
+    onIntent: (MainIntent) -> Unit,
+    onNavigate: (MainRoute) -> Unit,
+    onReplace: (MainRoute) -> Unit,
+    onBack: () -> Unit,
+) {
+    NavDisplay(
+        backStack = backStack,
+        onBack = onBack,
+        entryProvider = entryProvider {
+            entry<MainRoute.Splash> {
+                MainEntry(MainRoute.Splash, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Login> {
+                MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Terms> {
+                MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.SetupDeadline> {
+                MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.SetupDelay> {
+                MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Home> {
+                MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.History> {
+                MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Relations> {
+                MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Invite> {
+                MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.InviteStatus> {
+                MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.GuardianDetail> {
+                MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Notifications> {
+                MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Alert> {
+                MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Request> {
+                MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Settings> {
+                MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Schedule> {
+                MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Profile> {
+                MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.Privacy> {
+                MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.DeadlineChange> {
+                MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack)
+            }
+            entry<MainRoute.DelaySetting> {
+                MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack)
+            }
+        },
+    )
+}
+
+@Composable
+private fun MainEntry(
+    route: MainRoute,
+    state: MainState,
+    onIntent: (MainIntent) -> Unit,
+    onNavigate: (MainRoute) -> Unit,
+    onReplace: (MainRoute) -> Unit,
+    onBack: () -> Unit,
+) {
+    when (route) {
+        MainRoute.Splash -> SplashScreen(
+            onFinished = { onReplace(MainRoute.Login) },
+        )
+        else -> MainEntryContainer(
+            route = route,
+            onReplace = onReplace,
+        ) {
+            MainEntryContent(
+                route = route,
+                state = state,
+                onIntent = onIntent,
+                onNavigate = onNavigate,
+                onReplace = onReplace,
+                onBack = onBack,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MainEntryContainer(
+    route: MainRoute,
+    onReplace: (MainRoute) -> Unit,
+    content: @Composable () -> Unit,
+) {
     LivvingScrollableScreen(
-        bottomBar = if (currentRoute.hasBottomBar()) {
+        bottomBar = if (route.hasBottomBar()) {
             {
                 LivvingBottomBar(
                     items = listOf(
@@ -105,7 +227,7 @@ fun MainScreen(
                         "notifications" to "알림",
                         "settings" to "설정",
                     ),
-                    active = currentRoute.activeTab(),
+                    active = route.activeTab(),
                     onClick = { tab ->
                         onReplace(
                             when (tab) {
@@ -121,75 +243,12 @@ fun MainScreen(
         } else {
             null
         },
-    ) {
-        NavDisplay(
-            backStack = backStack,
-            onBack = onBack,
-            entryProvider = entryProvider {
-                entry<MainRoute.Login> {
-                    MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Terms> {
-                    MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.SetupDeadline> {
-                    MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.SetupDelay> {
-                    MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Home> {
-                    MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.History> {
-                    MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Relations> {
-                    MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Invite> {
-                    MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.InviteStatus> {
-                    MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.GuardianDetail> {
-                    MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Notifications> {
-                    MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Alert> {
-                    MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Request> {
-                    MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Settings> {
-                    MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Schedule> {
-                    MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Profile> {
-                    MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.Privacy> {
-                    MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.DeadlineChange> {
-                    MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack)
-                }
-                entry<MainRoute.DelaySetting> {
-                    MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack)
-                }
-            },
-        )
-    }
+        content = content,
+    )
 }
 
 @Composable
-private fun MainEntry(
+private fun MainEntryContent(
     route: MainRoute,
     state: MainState,
     onIntent: (MainIntent) -> Unit,
@@ -198,6 +257,7 @@ private fun MainEntry(
     onBack: () -> Unit,
 ) {
     when (route) {
+        MainRoute.Splash -> Unit
         MainRoute.Login -> LoginScreen(
             onStartClick = { onNavigate(MainRoute.Terms) },
         )
@@ -387,6 +447,7 @@ private fun MutableList<NavKey>.popOrReplace(fallback: MainRoute) {
 }
 
 private fun MainRoute.hasBottomBar(): Boolean = this !in setOf(
+    MainRoute.Splash,
     MainRoute.Login,
     MainRoute.Terms,
     MainRoute.SetupDeadline,

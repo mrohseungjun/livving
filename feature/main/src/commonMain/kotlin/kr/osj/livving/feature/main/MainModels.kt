@@ -35,6 +35,8 @@ data class TermsState(
 @Serializable
 sealed interface MainRoute : NavKey {
     @Serializable
+    data object Splash : MainRoute
+    @Serializable
     data object Login : MainRoute
     @Serializable
     data object Terms : MainRoute

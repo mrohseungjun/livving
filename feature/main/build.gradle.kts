@@ -14,6 +14,7 @@ kotlin {
             implementation(projects.feature.home)
             implementation(projects.feature.notifications)
             implementation(projects.feature.relations)
+            implementation(projects.feature.splash)
             implementation(projects.feature.settings)
             implementation(projects.feature.setup)
         }
