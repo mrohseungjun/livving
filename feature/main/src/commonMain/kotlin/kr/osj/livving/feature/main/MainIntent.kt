@@ -3,7 +3,6 @@ package kr.osj.livving.feature.main
 import kr.osj.livving.feature.relations.RelationsTab
 
 sealed interface MainIntent {
-    data class Navigate(val route: MainRoute) : MainIntent
     data object CompleteCheckIn : MainIntent
     data object ToggleLateState : MainIntent
     data class SelectDeadline(val time: String) : MainIntent

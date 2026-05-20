@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.android.gradlePlugin)
     implementation(libs.kotlin.gradlePlugin)
     implementation(libs.kotlin.composeCompiler.gradlePlugin)
+    implementation(libs.kotlin.serialization.gradlePlugin)
     implementation(libs.compose.gradlePlugin)
 }
 
@@ -89,6 +90,10 @@ gradlePlugin {
         register("coroutines") {
             id = "livving.coroutines"
             implementationClass = "CoroutinesConventionPlugin"
+        }
+        register("navigation3") {
+            id = "livving.navigation3"
+            implementationClass = "Navigation3ConventionPlugin"
         }
     }
 }

@@ -465,7 +465,7 @@ fun LivvingBottomBar(
             .fillMaxWidth()
             .height(76.dp),
         containerColor = Color.White,
-        tonalElevation = 0.dp,  
+        tonalElevation = 0.dp,
     ) {
         items.forEach { (key, label) ->
             val selected = key == active

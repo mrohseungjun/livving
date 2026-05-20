@@ -3,6 +3,11 @@ package kr.osj.livving.feature.main
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
 import kr.osj.livving.core.ui.LivvingBottomBar
 import kr.osj.livving.core.ui.LivvingScrollableScreen
 import kr.osj.livving.core.ui.addLivvingMinutes
@@ -29,29 +34,69 @@ import kr.osj.livving.feature.settings.PrivacyScreen
 import kr.osj.livving.feature.settings.ProfileScreen
 import kr.osj.livving.feature.settings.ScheduleScreen
 import kr.osj.livving.feature.settings.SettingsScreen
-import kr.osj.livving.feature.setup.DelayScreen
 import kr.osj.livving.feature.setup.DeadlineScreen
+import kr.osj.livving.feature.setup.DelayScreen
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import org.koin.compose.viewmodel.koinViewModel
+
+private val mainNavigationStateConfiguration = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) {
+            subclass(MainRoute.Login.serializer())
+            subclass(MainRoute.Terms.serializer())
+            subclass(MainRoute.SetupDeadline.serializer())
+            subclass(MainRoute.SetupDelay.serializer())
+            subclass(MainRoute.Home.serializer())
+            subclass(MainRoute.History.serializer())
+            subclass(MainRoute.Relations.serializer())
+            subclass(MainRoute.Invite.serializer())
+            subclass(MainRoute.InviteStatus.serializer())
+            subclass(MainRoute.GuardianDetail.serializer())
+            subclass(MainRoute.Notifications.serializer())
+            subclass(MainRoute.Alert.serializer())
+            subclass(MainRoute.Request.serializer())
+            subclass(MainRoute.Settings.serializer())
+            subclass(MainRoute.Schedule.serializer())
+            subclass(MainRoute.Profile.serializer())
+            subclass(MainRoute.Privacy.serializer())
+            subclass(MainRoute.DeadlineChange.serializer())
+            subclass(MainRoute.DelaySetting.serializer())
+        }
+    }
+}
 
 @Composable
 fun MainRoute(
     viewModel: MainViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val backStack = rememberNavBackStack(mainNavigationStateConfiguration, MainRoute.Login)
 
     MainScreen(
         state = state,
+        backStack = backStack,
+        currentRoute = backStack.lastOrNull() as? MainRoute ?: MainRoute.Login,
         onIntent = viewModel::onIntent,
+        onNavigate = { route -> backStack.navigateTo(route) },
+        onReplace = { route -> backStack.replaceWith(route) },
+        onBack = { backStack.popOrReplace(MainRoute.Home) },
     )
 }
 
 @Composable
 fun MainScreen(
     state: MainState,
+    backStack: List<NavKey>,
+    currentRoute: MainRoute,
     onIntent: (MainIntent) -> Unit,
+    onNavigate: (MainRoute) -> Unit,
+    onReplace: (MainRoute) -> Unit,
+    onBack: () -> Unit,
 ) {
     LivvingScrollableScreen(
-        bottomBar = if (state.route.hasBottomBar()) {
+        bottomBar = if (currentRoute.hasBottomBar()) {
             {
                 LivvingBottomBar(
                     items = listOf(
@@ -60,17 +105,15 @@ fun MainScreen(
                         "notifications" to "알림",
                         "settings" to "설정",
                     ),
-                    active = state.route.activeTab(),
+                    active = currentRoute.activeTab(),
                     onClick = { tab ->
-                        onIntent(
-                            MainIntent.Navigate(
-                                when (tab) {
-                                    "relations" -> MainRoute.Relations
-                                    "notifications" -> MainRoute.Notifications
-                                    "settings" -> MainRoute.Settings
-                                    else -> MainRoute.Home
-                                },
-                            ),
+                        onReplace(
+                            when (tab) {
+                                "relations" -> MainRoute.Relations
+                                "notifications" -> MainRoute.Notifications
+                                "settings" -> MainRoute.Settings
+                                else -> MainRoute.Home
+                            },
                         )
                     },
                 )
@@ -79,153 +122,267 @@ fun MainScreen(
             null
         },
     ) {
-        when (state.route) {
-            MainRoute.Login -> LoginScreen(
-                onStartClick = { onIntent(MainIntent.Navigate(MainRoute.Terms)) },
-            )
-            MainRoute.Terms -> TermsScreen(
-                state = AuthTermsState(
-                    service = state.terms.service,
-                    privacy = state.terms.privacy,
-                    age = state.terms.age,
-                    marketing = state.terms.marketing,
-                ),
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Login)) },
-                onToggleAllClick = { onIntent(MainIntent.ToggleAllTerms) },
-                onToggleServiceClick = { onIntent(MainIntent.ToggleTerms(TermsItem.Service)) },
-                onTogglePrivacyClick = { onIntent(MainIntent.ToggleTerms(TermsItem.Privacy)) },
-                onToggleAgeClick = { onIntent(MainIntent.ToggleTerms(TermsItem.Age)) },
-                onToggleMarketingClick = { onIntent(MainIntent.ToggleTerms(TermsItem.Marketing)) },
-                onContinueClick = { onIntent(MainIntent.Navigate(MainRoute.SetupDeadline)) },
-            )
-            MainRoute.SetupDeadline -> DeadlineScreen(
-                selectedDeadline = state.selectedDeadline,
-                fromSettings = false,
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Terms)) },
-                onDeadlineClick = { onIntent(MainIntent.SelectDeadline(it)) },
-                onSaveClick = { onIntent(MainIntent.SaveDeadline(false)) },
-            )
-            MainRoute.SetupDelay -> DelayScreen(
-                deadline = state.deadline,
-                delayMinutes = state.delayMinutes,
-                fromSettings = false,
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.SetupDeadline)) },
-                onDelayClick = { onIntent(MainIntent.SelectDelay(it)) },
-                onSaveClick = { onIntent(MainIntent.SaveDelay(false)) },
-            )
-            MainRoute.Home -> HomeScreen(
-                deadline = state.deadline,
-                delayMinutes = state.delayMinutes,
-                checked = state.checked,
-                lastCheckedAt = state.lastCheckedAt,
-                late = state.status == CheckInStatus.Late,
-                acceptedGuardianNames = state.guardians.filter { it.status == GuardianStatus.Accepted }.map { it.name },
-                onNotificationClick = { onIntent(MainIntent.Navigate(MainRoute.Notifications)) },
-                onCheckInClick = { onIntent(MainIntent.CompleteCheckIn) },
-                onRelationsClick = { onIntent(MainIntent.Navigate(MainRoute.Relations)) },
-                onHistoryClick = { onIntent(MainIntent.Navigate(MainRoute.History)) },
-                onToggleLateClick = { onIntent(MainIntent.ToggleLateState) },
-            )
-            MainRoute.History -> HistoryScreen(
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Home)) },
-            )
-            MainRoute.Relations -> RelationsScreen(
-                selectedTab = state.relationTab,
-                guardians = state.guardians.map { guardian ->
-                    RelationGuardianUiModel(
-                        id = guardian.id,
-                        name = guardian.name,
-                        relation = guardian.relation,
-                        status = if (guardian.status == GuardianStatus.Pending) RelationGuardianStatus.Pending else RelationGuardianStatus.Accepted,
-                    )
-                },
-                watchingUsers = seedWatchingUsers,
-                deadline = state.deadline,
-                alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
-                onMyGuardiansClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.MyGuardians)) },
-                onWatchingClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.Watching)) },
-                onGuardianClick = { guardian ->
-                    onIntent(MainIntent.Navigate(if (guardian.status == RelationGuardianStatus.Pending) MainRoute.InviteStatus else MainRoute.GuardianDetail))
-                },
-                onInviteClick = { onIntent(MainIntent.Navigate(MainRoute.Invite)) },
-                onWatchingUserClick = { user ->
-                    onIntent(MainIntent.Navigate(if (user.state == WatchingState.Missed) MainRoute.Alert else MainRoute.Home))
-                },
-            )
-            MainRoute.Invite -> InviteScreen(
-                pendingCount = state.guardians.count { it.status == GuardianStatus.Pending },
-                acceptedCount = state.guardians.count { it.status == GuardianStatus.Accepted },
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Relations)) },
-                onCreateInviteClick = { onIntent(MainIntent.CreateInvite) },
-            )
-            MainRoute.InviteStatus -> InviteStatusScreen(
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Relations)) },
-            )
-            MainRoute.GuardianDetail -> GuardianDetailScreen(
-                deadline = state.deadline,
-                delayMinutes = state.delayMinutes,
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Relations)) },
-            )
-            MainRoute.Notifications -> NotificationsScreen(
-                deadline = state.deadline,
-                alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
-                onAlertClick = { onIntent(MainIntent.Navigate(MainRoute.Alert)) },
-                onRequestClick = { onIntent(MainIntent.Navigate(MainRoute.Request)) },
-            )
-            MainRoute.Alert -> AlertScreen(
-                deadline = state.deadline,
-                alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Notifications)) },
-                onConfirmClick = { onIntent(MainIntent.Navigate(MainRoute.Notifications)) },
-            )
-            MainRoute.Request -> RequestScreen(
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Notifications)) },
-                onAcceptClick = { onIntent(MainIntent.Navigate(MainRoute.Relations)) },
-                onRejectClick = { onIntent(MainIntent.Navigate(MainRoute.Notifications)) },
-            )
-            MainRoute.Settings -> SettingsScreen(
-                deadline = state.deadline,
-                delayMinutes = state.delayMinutes,
-                pushEnabled = state.pushEnabled,
-                relationPushEnabled = state.relationPushEnabled,
-                missedPushEnabled = state.missedPushEnabled,
-                onDeadlineClick = { onIntent(MainIntent.Navigate(MainRoute.DeadlineChange)) },
-                onDelayClick = { onIntent(MainIntent.Navigate(MainRoute.DelaySetting)) },
-                onScheduleClick = { onIntent(MainIntent.Navigate(MainRoute.Schedule)) },
-                onPushToggleClick = { onIntent(MainIntent.TogglePush) },
-                onRelationPushToggleClick = { onIntent(MainIntent.ToggleRelationPush) },
-                onMissedPushToggleClick = { onIntent(MainIntent.ToggleMissedPush) },
-                onProfileClick = { onIntent(MainIntent.Navigate(MainRoute.Profile)) },
-                onPrivacyClick = { onIntent(MainIntent.Navigate(MainRoute.Privacy)) },
-                onLogoutClick = { onIntent(MainIntent.Navigate(MainRoute.Login)) },
-            )
-            MainRoute.Schedule -> ScheduleScreen(
-                deadline = state.deadline,
-                delayMinutes = state.delayMinutes,
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Settings)) },
-            )
-            MainRoute.Profile -> ProfileScreen(
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Settings)) },
-            )
-            MainRoute.Privacy -> PrivacyScreen(
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Settings)) },
-            )
-            MainRoute.DeadlineChange -> DeadlineScreen(
-                selectedDeadline = state.selectedDeadline,
-                fromSettings = true,
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Settings)) },
-                onDeadlineClick = { onIntent(MainIntent.SelectDeadline(it)) },
-                onSaveClick = { onIntent(MainIntent.SaveDeadline(true)) },
-            )
-            MainRoute.DelaySetting -> DelayScreen(
-                deadline = state.deadline,
-                delayMinutes = state.delayMinutes,
-                fromSettings = true,
-                onBackClick = { onIntent(MainIntent.Navigate(MainRoute.Settings)) },
-                onDelayClick = { onIntent(MainIntent.SelectDelay(it)) },
-                onSaveClick = { onIntent(MainIntent.SaveDelay(true)) },
-            )
-        }
+        NavDisplay(
+            backStack = backStack,
+            onBack = onBack,
+            entryProvider = entryProvider {
+                entry<MainRoute.Login> {
+                    MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Terms> {
+                    MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.SetupDeadline> {
+                    MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.SetupDelay> {
+                    MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Home> {
+                    MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.History> {
+                    MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Relations> {
+                    MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Invite> {
+                    MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.InviteStatus> {
+                    MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.GuardianDetail> {
+                    MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Notifications> {
+                    MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Alert> {
+                    MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Request> {
+                    MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Settings> {
+                    MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Schedule> {
+                    MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Profile> {
+                    MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.Privacy> {
+                    MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.DeadlineChange> {
+                    MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack)
+                }
+                entry<MainRoute.DelaySetting> {
+                    MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack)
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun MainEntry(
+    route: MainRoute,
+    state: MainState,
+    onIntent: (MainIntent) -> Unit,
+    onNavigate: (MainRoute) -> Unit,
+    onReplace: (MainRoute) -> Unit,
+    onBack: () -> Unit,
+) {
+    when (route) {
+        MainRoute.Login -> LoginScreen(
+            onStartClick = { onNavigate(MainRoute.Terms) },
+        )
+        MainRoute.Terms -> TermsScreen(
+            state = AuthTermsState(
+                service = state.terms.service,
+                privacy = state.terms.privacy,
+                age = state.terms.age,
+                marketing = state.terms.marketing,
+            ),
+            onBackClick = onBack,
+            onToggleAllClick = { onIntent(MainIntent.ToggleAllTerms) },
+            onToggleServiceClick = { onIntent(MainIntent.ToggleTerms(TermsItem.Service)) },
+            onTogglePrivacyClick = { onIntent(MainIntent.ToggleTerms(TermsItem.Privacy)) },
+            onToggleAgeClick = { onIntent(MainIntent.ToggleTerms(TermsItem.Age)) },
+            onToggleMarketingClick = { onIntent(MainIntent.ToggleTerms(TermsItem.Marketing)) },
+            onContinueClick = { onNavigate(MainRoute.SetupDeadline) },
+        )
+        MainRoute.SetupDeadline -> DeadlineScreen(
+            selectedDeadline = state.selectedDeadline,
+            fromSettings = false,
+            onBackClick = onBack,
+            onDeadlineClick = { onIntent(MainIntent.SelectDeadline(it)) },
+            onSaveClick = {
+                onIntent(MainIntent.SaveDeadline(false))
+                onNavigate(MainRoute.SetupDelay)
+            },
+        )
+        MainRoute.SetupDelay -> DelayScreen(
+            deadline = state.deadline,
+            delayMinutes = state.delayMinutes,
+            fromSettings = false,
+            onBackClick = onBack,
+            onDelayClick = { onIntent(MainIntent.SelectDelay(it)) },
+            onSaveClick = {
+                onIntent(MainIntent.SaveDelay(false))
+                onReplace(MainRoute.Home)
+            },
+        )
+        MainRoute.Home -> HomeScreen(
+            deadline = state.deadline,
+            delayMinutes = state.delayMinutes,
+            checked = state.checked,
+            lastCheckedAt = state.lastCheckedAt,
+            late = state.status == CheckInStatus.Late,
+            acceptedGuardianNames = state.guardians.filter { it.status == GuardianStatus.Accepted }.map { it.name },
+            onNotificationClick = { onNavigate(MainRoute.Notifications) },
+            onCheckInClick = { onIntent(MainIntent.CompleteCheckIn) },
+            onRelationsClick = { onReplace(MainRoute.Relations) },
+            onHistoryClick = { onNavigate(MainRoute.History) },
+            onToggleLateClick = { onIntent(MainIntent.ToggleLateState) },
+        )
+        MainRoute.History -> HistoryScreen(onBackClick = onBack)
+        MainRoute.Relations -> RelationsScreen(
+            selectedTab = state.relationTab,
+            guardians = state.guardians.map { guardian ->
+                RelationGuardianUiModel(
+                    id = guardian.id,
+                    name = guardian.name,
+                    relation = guardian.relation,
+                    status = if (guardian.status == GuardianStatus.Pending) {
+                        RelationGuardianStatus.Pending
+                    } else {
+                        RelationGuardianStatus.Accepted
+                    },
+                )
+            },
+            watchingUsers = seedWatchingUsers,
+            deadline = state.deadline,
+            alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
+            onMyGuardiansClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.MyGuardians)) },
+            onWatchingClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.Watching)) },
+            onGuardianClick = { guardian ->
+                onNavigate(
+                    if (guardian.status == RelationGuardianStatus.Pending) {
+                        MainRoute.InviteStatus
+                    } else {
+                        MainRoute.GuardianDetail
+                    },
+                )
+            },
+            onInviteClick = { onNavigate(MainRoute.Invite) },
+            onWatchingUserClick = { user ->
+                if (user.state == WatchingState.Missed) {
+                    onNavigate(MainRoute.Alert)
+                } else {
+                    onReplace(MainRoute.Home)
+                }
+            },
+        )
+        MainRoute.Invite -> InviteScreen(
+            pendingCount = state.guardians.count { it.status == GuardianStatus.Pending },
+            acceptedCount = state.guardians.count { it.status == GuardianStatus.Accepted },
+            onBackClick = onBack,
+            onCreateInviteClick = { onIntent(MainIntent.CreateInvite) },
+        )
+        MainRoute.InviteStatus -> InviteStatusScreen(onBackClick = onBack)
+        MainRoute.GuardianDetail -> GuardianDetailScreen(
+            deadline = state.deadline,
+            delayMinutes = state.delayMinutes,
+            onBackClick = onBack,
+        )
+        MainRoute.Notifications -> NotificationsScreen(
+            deadline = state.deadline,
+            alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
+            onAlertClick = { onNavigate(MainRoute.Alert) },
+            onRequestClick = { onNavigate(MainRoute.Request) },
+        )
+        MainRoute.Alert -> AlertScreen(
+            deadline = state.deadline,
+            alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
+            onBackClick = onBack,
+            onConfirmClick = { onReplace(MainRoute.Notifications) },
+        )
+        MainRoute.Request -> RequestScreen(
+            onBackClick = onBack,
+            onAcceptClick = { onReplace(MainRoute.Relations) },
+            onRejectClick = { onReplace(MainRoute.Notifications) },
+        )
+        MainRoute.Settings -> SettingsScreen(
+            deadline = state.deadline,
+            delayMinutes = state.delayMinutes,
+            pushEnabled = state.pushEnabled,
+            relationPushEnabled = state.relationPushEnabled,
+            missedPushEnabled = state.missedPushEnabled,
+            onDeadlineClick = {
+                onIntent(MainIntent.SelectDeadline(state.deadline))
+                onNavigate(MainRoute.DeadlineChange)
+            },
+            onDelayClick = { onNavigate(MainRoute.DelaySetting) },
+            onScheduleClick = { onNavigate(MainRoute.Schedule) },
+            onPushToggleClick = { onIntent(MainIntent.TogglePush) },
+            onRelationPushToggleClick = { onIntent(MainIntent.ToggleRelationPush) },
+            onMissedPushToggleClick = { onIntent(MainIntent.ToggleMissedPush) },
+            onProfileClick = { onNavigate(MainRoute.Profile) },
+            onPrivacyClick = { onNavigate(MainRoute.Privacy) },
+            onLogoutClick = { onReplace(MainRoute.Login) },
+        )
+        MainRoute.Schedule -> ScheduleScreen(
+            deadline = state.deadline,
+            delayMinutes = state.delayMinutes,
+            onBackClick = onBack,
+        )
+        MainRoute.Profile -> ProfileScreen(onBackClick = onBack)
+        MainRoute.Privacy -> PrivacyScreen(onBackClick = onBack)
+        MainRoute.DeadlineChange -> DeadlineScreen(
+            selectedDeadline = state.selectedDeadline,
+            fromSettings = true,
+            onBackClick = onBack,
+            onDeadlineClick = { onIntent(MainIntent.SelectDeadline(it)) },
+            onSaveClick = {
+                onIntent(MainIntent.SaveDeadline(true))
+                onReplace(MainRoute.Settings)
+            },
+        )
+        MainRoute.DelaySetting -> DelayScreen(
+            deadline = state.deadline,
+            delayMinutes = state.delayMinutes,
+            fromSettings = true,
+            onBackClick = onBack,
+            onDelayClick = { onIntent(MainIntent.SelectDelay(it)) },
+            onSaveClick = {
+                onIntent(MainIntent.SaveDelay(true))
+                onReplace(MainRoute.Settings)
+            },
+        )
+    }
+}
+
+private fun MutableList<NavKey>.navigateTo(route: MainRoute) {
+    if (lastOrNull() != route) {
+        add(route)
+    }
+}
+
+private fun MutableList<NavKey>.replaceWith(route: MainRoute) {
+    clear()
+    add(route)
+}
+
+private fun MutableList<NavKey>.popOrReplace(fallback: MainRoute) {
+    if (size > 1) {
+        removeAt(lastIndex)
+    } else {
+        replaceWith(fallback)
     }
 }
 

@@ -2,6 +2,7 @@ plugins {
     id("livving.compose.multiplatform.library")
     id("livving.koin.compose")
     id("livving.coroutines")
+    id("livving.navigation3")
 }
 
 kotlin {

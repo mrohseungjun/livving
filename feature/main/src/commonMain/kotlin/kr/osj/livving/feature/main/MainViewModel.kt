@@ -18,13 +18,12 @@ class MainViewModel(
 
     fun onIntent(intent: MainIntent) {
         when (intent) {
-            is MainIntent.Navigate -> navigate(intent.route)
             MainIntent.CompleteCheckIn -> completeCheckIn()
             MainIntent.ToggleLateState -> toggleLateState()
             is MainIntent.SelectDeadline -> update { it.copy(selectedDeadline = intent.time) }
             is MainIntent.SaveDeadline -> saveDeadline(intent.fromSettings)
             is MainIntent.SelectDelay -> update { it.copy(delayMinutes = intent.minutes) }
-            is MainIntent.SaveDelay -> navigate(if (intent.fromSettings) MainRoute.Settings else MainRoute.Home)
+            is MainIntent.SaveDelay -> Unit
             is MainIntent.ToggleTerms -> toggleTerms(intent.item)
             MainIntent.ToggleAllTerms -> toggleAllTerms()
             is MainIntent.SelectRelationTab -> update { it.copy(relationTab = intent.tab) }
@@ -32,19 +31,6 @@ class MainViewModel(
             MainIntent.TogglePush -> update { it.copy(pushEnabled = !it.pushEnabled) }
             MainIntent.ToggleRelationPush -> update { it.copy(relationPushEnabled = !it.relationPushEnabled) }
             MainIntent.ToggleMissedPush -> update { it.copy(missedPushEnabled = !it.missedPushEnabled) }
-        }
-    }
-
-    private fun navigate(route: MainRoute) {
-        update {
-            it.copy(
-                route = route,
-                selectedDeadline = if (route == MainRoute.SetupDeadline || route == MainRoute.DeadlineChange) {
-                    it.deadline
-                } else {
-                    it.selectedDeadline
-                },
-            )
         }
     }
 
@@ -72,7 +58,6 @@ class MainViewModel(
         update {
             it.copy(
                 deadline = it.selectedDeadline,
-                route = if (fromSettings) MainRoute.Settings else MainRoute.SetupDelay,
             )
         }
     }
