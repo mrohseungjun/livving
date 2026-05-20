@@ -1,0 +1,20 @@
+plugins {
+    id("livving.compose.multiplatform.library")
+    id("livving.koin.compose")
+    id("livving.coroutines")
+}
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(projects.core.ui)
+            implementation(projects.domain.livving)
+            implementation(projects.feature.auth)
+            implementation(projects.feature.home)
+            implementation(projects.feature.notifications)
+            implementation(projects.feature.relations)
+            implementation(projects.feature.settings)
+            implementation(projects.feature.setup)
+        }
+    }
+}
