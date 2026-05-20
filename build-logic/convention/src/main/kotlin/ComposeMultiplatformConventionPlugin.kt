@@ -17,7 +17,9 @@ class ComposeMultiplatformConventionPlugin : Plugin<Project> {
                     implementation(libs.findLibrary("compose-runtime").get())
                     implementation(libs.findLibrary("compose-foundation").get())
                     implementation(libs.findLibrary("compose-material3").get())
+                    implementation(libs.findLibrary("compose-material-icons-extended").get())
                     implementation(libs.findLibrary("compose-ui").get())
+                    implementation(libs.findLibrary("compose-components-resources").get())
                     implementation(libs.findLibrary("compose-uiToolingPreview").get())
                     implementation(libs.findLibrary("androidx-lifecycle-runtimeCompose").get())
                 }

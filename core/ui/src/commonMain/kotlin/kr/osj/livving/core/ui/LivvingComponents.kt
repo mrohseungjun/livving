@@ -21,14 +21,34 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,11 +56,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import livving.core.ui.generated.resources.Res
+import livving.core.ui.generated.resources.livving_logo
+import org.jetbrains.compose.resources.painterResource
 
 val LivvingGradient = Brush.linearGradient(
     colors = listOf(LivvingCoral, LivvingPurple),
@@ -98,32 +123,14 @@ fun LivvingLogo(
     modifier: Modifier = Modifier,
     small: Boolean = false,
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(if (small) 36.dp else 48.dp)
-                .clip(RoundedCornerShape(if (small) 14.dp else 18.dp))
-                .background(LivvingGradient),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "✓",
-                color = Color.White,
-                fontSize = if (small) 20.sp else 26.sp,
-                fontWeight = FontWeight.Black,
-            )
-        }
-        Text(
-            text = "livving",
-            color = LivvingCoral,
-            fontSize = if (small) 26.sp else 40.sp,
-            fontWeight = FontWeight.Black,
-        )
-    }
+    androidx.compose.foundation.Image(
+        painter = painterResource(Res.drawable.livving_logo),
+        contentDescription = "livving",
+        modifier = modifier
+            .width(if (small) 128.dp else 232.dp)
+            .height(if (small) 45.dp else 82.dp),
+        contentScale = ContentScale.Fit,
+    )
 }
 
 @Composable
@@ -143,7 +150,7 @@ fun LivvingHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             when {
-                onBack != null -> LivvingIconCircle(text = "‹", onClick = onBack)
+                onBack != null -> LivvingIconCircle(icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft, onClick = onBack)
                 showLogo -> LivvingLogo(small = true)
                 else -> Spacer(Modifier.width(44.dp))
             }
@@ -265,6 +272,26 @@ fun LivvingIconCircle(
     color: Color = LivvingText,
     onClick: () -> Unit,
 ) {
+    LivvingIconCircle(
+        icon = text.toLivvingActionIcon(),
+        modifier = modifier,
+        size = size,
+        background = background,
+        color = color,
+        onClick = onClick,
+    )
+}
+
+@Composable
+fun LivvingIconCircle(
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    size: Dp = 44.dp,
+    background: Color = Color(0xFFFAFAFA),
+    color: Color = LivvingText,
+    onClick: () -> Unit,
+) {
     Surface(
         modifier = modifier.size(size),
         shape = CircleShape,
@@ -272,7 +299,12 @@ fun LivvingIconCircle(
         onClick = onClick,
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(text = text, color = color, fontSize = 22.sp, fontWeight = FontWeight.Black)
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = color,
+                modifier = Modifier.size(24.dp),
+            )
         }
     }
 }
@@ -358,7 +390,7 @@ fun LivvingMenuRow(
     title: String,
     desc: String? = null,
     leading: String,
-    trailing: String = "›",
+    trailing: ImageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
     onClick: () -> Unit,
 ) {
     LivvingCard(
@@ -373,14 +405,24 @@ fun LivvingMenuRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(text = leading, color = LivvingCoral, fontSize = 20.sp, fontWeight = FontWeight.Black)
+            Icon(
+                imageVector = leading.toLivvingMenuIcon(),
+                contentDescription = null,
+                tint = LivvingCoral,
+                modifier = Modifier.size(24.dp),
+            )
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = title, fontWeight = FontWeight.Black, color = LivvingText)
                 if (desc != null) {
                     Text(text = desc, color = LivvingMuted, fontSize = 13.sp)
                 }
             }
-            Text(text = trailing, color = LivvingMuted, fontSize = 24.sp)
+            Icon(
+                imageVector = trailing,
+                contentDescription = null,
+                tint = LivvingMuted,
+                modifier = Modifier.size(22.dp),
+            )
         }
     }
 }
@@ -402,7 +444,12 @@ fun LivvingCheckDot(
         contentAlignment = Alignment.Center,
     ) {
         if (checked) {
-            Text(text = "✓", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Black)
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 }
@@ -413,42 +460,39 @@ fun LivvingBottomBar(
     active: String,
     onClick: (String) -> Unit,
 ) {
-    Row(
+    NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
-            .height(76.dp)
-            .background(Color.White)
-            .border(1.dp, LivvingLine),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically,
+            .height(76.dp),
+        containerColor = Color.White,
+        tonalElevation = 0.dp,  
     ) {
         items.forEach { (key, label) ->
             val selected = key == active
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onClick(key) },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = when (key) {
-                        "home" -> "⌂"
-                        "relations" -> "◎"
-                        "notifications" -> "!"
-                        else -> "⚙"
-                    },
-                    color = if (selected) LivvingCoral else Color(0xFFA3A3A3),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Black,
+            NavigationBarItem(
+                selected = selected,
+                onClick = { onClick(key) },
+                icon = {
+                    Icon(
+                        imageVector = key.toLivvingBottomIcon(),
+                        contentDescription = label,
+                    )
+                },
+                label = {
+                    Text(
+                        text = label,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = LivvingCoral,
+                    selectedTextColor = LivvingCoral,
+                    indicatorColor = Color(0xFFFFF1F0),
+                    unselectedIconColor = Color(0xFFA3A3A3),
+                    unselectedTextColor = Color(0xFFA3A3A3),
                 )
-                Text(
-                    text = label,
-                    color = if (selected) LivvingCoral else Color(0xFFA3A3A3),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+            )
         }
     }
 }
@@ -591,7 +635,12 @@ fun LivvingFlowLine(
                 .background(Color.White),
             contentAlignment = Alignment.Center,
         ) {
-            Text("•", color = LivvingCoral, fontSize = 24.sp, fontWeight = FontWeight.Black)
+            Icon(
+                imageVector = desc.toLivvingFlowIcon(),
+                contentDescription = null,
+                tint = LivvingCoral,
+                modifier = Modifier.size(21.dp),
+            )
         }
         Column {
             Text(title, fontWeight = FontWeight.Black)
@@ -622,7 +671,12 @@ fun LivvingCheckInButton(
                     .background(Color.White),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("✓", color = if (checked) LivvingSuccess else LivvingCoral, fontSize = 38.sp, fontWeight = FontWeight.Black)
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = if (checked) LivvingSuccess else LivvingCoral,
+                    modifier = Modifier.size(38.dp),
+                )
             }
             Spacer(Modifier.height(16.dp))
             Text(
@@ -645,7 +699,12 @@ fun LivvingSummaryCard(
 ) {
     LivvingCard(modifier) {
         Column(Modifier.padding(16.dp)) {
-            Text("•", color = color, fontSize = 24.sp, fontWeight = FontWeight.Black)
+            Icon(
+                imageVector = label.toLivvingSummaryIcon(),
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(24.dp),
+            )
             Text(label, color = LivvingMuted, fontSize = 13.sp)
             Text(value, fontSize = 26.sp, fontWeight = FontWeight.Black)
             Text(sub, color = Color(0xFFA3A3A3), fontSize = 12.sp)
@@ -759,7 +818,12 @@ fun LivvingSettingRow(
             Text(value, color = LivvingText, fontSize = 13.sp, fontWeight = FontWeight.Black)
             Spacer(Modifier.width(6.dp))
         }
-        Text("›", color = LivvingMuted, fontSize = 22.sp)
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = LivvingMuted,
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
 
@@ -777,22 +841,17 @@ fun LivvingToggleRow(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(title, fontWeight = FontWeight.Bold)
-        Box(
-            modifier = Modifier
-                .size(width = 48.dp, height = 28.dp)
-                .clip(CircleShape)
-                .background(if (value) LivvingCoral else Color(0xFFE5E5E5))
-                .clickable(onClick = onClick)
-                .padding(4.dp),
-            contentAlignment = if (value) Alignment.CenterEnd else Alignment.CenterStart,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(20.dp)
-                    .clip(CircleShape)
-                    .background(Color.White),
-            )
-        }
+        Switch(
+            checked = value,
+            onCheckedChange = { onClick() },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = LivvingCoral,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = Color(0xFFE5E5E5),
+                uncheckedBorderColor = Color.Transparent,
+            ),
+        )
     }
 }
 
@@ -802,7 +861,12 @@ fun LivvingPolicyItem(
     desc: String,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("i", color = LivvingCoral, fontWeight = FontWeight.Black)
+        Icon(
+            imageVector = Icons.Filled.Info,
+            contentDescription = null,
+            tint = LivvingCoral,
+            modifier = Modifier.size(20.dp),
+        )
         Column {
             Text(title, fontWeight = FontWeight.Black)
             Text(desc, color = LivvingMuted, fontSize = 13.sp)
@@ -837,4 +901,38 @@ private fun LivvingTone.colors(): Pair<Color, Color> = when (this) {
     LivvingTone.Orange -> Color(0xFFFFF7ED) to LivvingWarning
     LivvingTone.Red -> Color(0xFFFEF2F2) to LivvingDanger
     LivvingTone.Neutral -> Color(0xFFFAFAFA) to LivvingMuted
+}
+
+private fun String.toLivvingBottomIcon(): ImageVector = when (this) {
+    "home" -> Icons.Filled.Home
+    "relations" -> Icons.Filled.Groups
+    "notifications" -> Icons.Filled.Notifications
+    else -> Icons.Filled.Settings
+}
+
+private fun String.toLivvingMenuIcon(): ImageVector = when {
+    contains("카카오") || contains("톡") -> Icons.AutoMirrored.Filled.Chat
+    contains("복사") -> Icons.Filled.ContentCopy
+    contains("전화") -> Icons.Filled.Phone
+    contains("초대") || contains("보호자") -> Icons.Filled.PersonAdd
+    else -> Icons.Filled.Link
+}
+
+private fun String.toLivvingActionIcon(): ImageVector = when (this) {
+    "!" -> Icons.Filled.Notifications
+    "‹", "<" -> Icons.AutoMirrored.Filled.KeyboardArrowLeft
+    "›", ">" -> Icons.AutoMirrored.Filled.KeyboardArrowRight
+    "전화" -> Icons.Filled.Phone
+    else -> Icons.Filled.Info
+}
+
+private fun String.toLivvingFlowIcon(): ImageVector = when {
+    contains("알림") -> Icons.Filled.NotificationsActive
+    else -> Icons.Filled.AccessTime
+}
+
+private fun String.toLivvingSummaryIcon(): ImageVector = when {
+    contains("알림") -> Icons.Filled.Notifications
+    contains("마감") -> Icons.Filled.AccessTime
+    else -> Icons.Filled.Info
 }
