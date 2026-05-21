@@ -1,6 +1,7 @@
 package kr.osj.livving.feature.main
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation3.runtime.NavKey
@@ -76,6 +77,12 @@ fun MainRoute(
     val state by viewModel.state.collectAsState()
     val backStack = rememberNavBackStack(mainNavigationStateConfiguration, MainRoute.Splash)
 
+    LaunchedEffect(state.sessionChecked, state.startRoute) {
+        if (state.sessionChecked && backStack.lastOrNull() == MainRoute.Splash) {
+            backStack.replaceWith(state.startRoute)
+        }
+    }
+
     MainScreen(
         state = state,
         backStack = backStack,
@@ -83,6 +90,8 @@ fun MainRoute(
         onNavigate = { route -> backStack.navigateTo(route) },
         onReplace = { route -> backStack.replaceWith(route) },
         onBack = { backStack.popOrReplace(MainRoute.Home) },
+        onLoginSuccess = { onReady -> viewModel.refreshSessionAfterLogin(onReady) },
+        onSaveInitialSettings = { onSaved -> viewModel.saveInitialSettings(onSaved) },
     )
 }
 
@@ -94,6 +103,8 @@ fun MainScreen(
     onNavigate: (MainRoute) -> Unit,
     onReplace: (MainRoute) -> Unit,
     onBack: () -> Unit,
+    onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
+    onSaveInitialSettings: (() -> Unit) -> Unit,
 ) {
     MainNavDisplay(
         state = state,
@@ -102,6 +113,8 @@ fun MainScreen(
         onNavigate = onNavigate,
         onReplace = onReplace,
         onBack = onBack,
+        onLoginSuccess = onLoginSuccess,
+        onSaveInitialSettings = onSaveInitialSettings,
     )
 }
 
@@ -113,70 +126,72 @@ private fun MainNavDisplay(
     onNavigate: (MainRoute) -> Unit,
     onReplace: (MainRoute) -> Unit,
     onBack: () -> Unit,
+    onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
+    onSaveInitialSettings: (() -> Unit) -> Unit,
 ) {
     NavDisplay(
         backStack = backStack,
         onBack = onBack,
         entryProvider = entryProvider {
             entry<MainRoute.Splash> {
-                MainEntry(MainRoute.Splash, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Splash, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Login> {
-                MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Terms> {
-                MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.SetupDeadline> {
-                MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.SetupDelay> {
-                MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Home> {
-                MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.History> {
-                MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Relations> {
-                MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Invite> {
-                MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.InviteStatus> {
-                MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.GuardianDetail> {
-                MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Notifications> {
-                MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Alert> {
-                MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Request> {
-                MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Settings> {
-                MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Schedule> {
-                MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Profile> {
-                MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.Privacy> {
-                MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.DeadlineChange> {
-                MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
             entry<MainRoute.DelaySetting> {
-                MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack)
+                MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
             }
         },
     )
@@ -190,10 +205,16 @@ private fun MainEntry(
     onNavigate: (MainRoute) -> Unit,
     onReplace: (MainRoute) -> Unit,
     onBack: () -> Unit,
+    onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
+    onSaveInitialSettings: (() -> Unit) -> Unit,
 ) {
     when (route) {
         MainRoute.Splash -> SplashScreen(
-            onFinished = { onReplace(MainRoute.Login) },
+            onFinished = {
+                if (state.sessionChecked) {
+                    onReplace(state.startRoute)
+                }
+            },
         )
         else -> MainEntryContainer(
             route = route,
@@ -206,6 +227,8 @@ private fun MainEntry(
                 onNavigate = onNavigate,
                 onReplace = onReplace,
                 onBack = onBack,
+                onLoginSuccess = onLoginSuccess,
+                onSaveInitialSettings = onSaveInitialSettings,
             )
         }
     }
@@ -255,11 +278,17 @@ private fun MainEntryContent(
     onNavigate: (MainRoute) -> Unit,
     onReplace: (MainRoute) -> Unit,
     onBack: () -> Unit,
+    onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
+    onSaveInitialSettings: (() -> Unit) -> Unit,
 ) {
     when (route) {
         MainRoute.Splash -> Unit
         MainRoute.Login -> LoginScreen(
-            onLoginSuccess = { onNavigate(MainRoute.Terms) },
+            onLoginSuccess = {
+                onLoginSuccess { route ->
+                    onReplace(route)
+                }
+            },
         )
         MainRoute.Terms -> TermsScreen(
             state = AuthTermsState(
@@ -294,7 +323,9 @@ private fun MainEntryContent(
             onDelayClick = { onIntent(MainIntent.SelectDelay(it)) },
             onSaveClick = {
                 onIntent(MainIntent.SaveDelay(false))
-                onReplace(MainRoute.Home)
+                onSaveInitialSettings {
+                    onReplace(MainRoute.Home)
+                }
             },
         )
         MainRoute.Home -> HomeScreen(

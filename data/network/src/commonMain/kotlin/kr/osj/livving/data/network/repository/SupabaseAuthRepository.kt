@@ -5,7 +5,11 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Kakao
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import kr.osj.livving.data.network.dto.ProfileDto
+import kr.osj.livving.data.network.dto.UserSettingsDto
+import kr.osj.livving.domain.livving.AuthSession
+import kr.osj.livving.domain.livving.InitialUserSettings
 import kr.osj.livving.domain.livving.KakaoLoginResult
 import kr.osj.livving.domain.livving.KakaoLoginToken
 import kr.osj.livving.domain.livving.LivvingUser
@@ -14,6 +18,32 @@ import kr.osj.livving.domain.livving.repository.AuthRepository
 class SupabaseAuthRepository(
     private val client: SupabaseClient,
 ) : AuthRepository {
+    override suspend fun getCurrentSession(): AuthSession? {
+        client.auth.awaitInitialization()
+        val user = client.auth.currentUserOrNull() ?: return null
+        val profile = client.from("profiles")
+            .select {
+                filter {
+                    filter("id", FilterOperator.EQ, user.id)
+                }
+            }
+            .decodeList<ProfileDto>()
+            .firstOrNull()
+            ?: return null
+        val settings = client.from("user_settings")
+            .select {
+                filter {
+                    filter("user_id", FilterOperator.EQ, user.id)
+                }
+            }
+            .decodeList<UserSettingsDto>()
+
+        return AuthSession(
+            user = profile.toDomain(),
+            hasCompletedInitialSetup = settings.isNotEmpty(),
+        )
+    }
+
     override suspend fun loginWithKakao(token: KakaoLoginToken): KakaoLoginResult {
         client.auth.signInWith(IDToken) {
             provider = Kakao
@@ -55,7 +85,28 @@ class SupabaseAuthRepository(
         )
     }
 
+    override suspend fun saveInitialSettings(userId: String, settings: InitialUserSettings) {
+        client.from("user_settings")
+            .upsert(
+                UserSettingsDto(
+                    userId = userId,
+                    deadlineTime = settings.deadline,
+                    delayMinutes = settings.delayMinutes,
+                    pushEnabled = settings.pushEnabled,
+                    relationPushEnabled = settings.relationPushEnabled,
+                    missedPushEnabled = settings.missedPushEnabled,
+                ),
+            )
+    }
+
     override suspend fun logout() {
         client.auth.signOut()
     }
+
+    private fun ProfileDto.toDomain(): LivvingUser = LivvingUser(
+        id = id,
+        kakaoId = kakaoId,
+        nickname = nickname,
+        profileImageUrl = profileImageUrl,
+    )
 }

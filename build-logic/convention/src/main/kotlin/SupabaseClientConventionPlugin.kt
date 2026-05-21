@@ -7,6 +7,7 @@ class SupabaseClientConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             pluginManager.apply("livving.ktor.client")
+            pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
 
             val kotlin = extensions.getByType<KotlinMultiplatformExtension>()
 

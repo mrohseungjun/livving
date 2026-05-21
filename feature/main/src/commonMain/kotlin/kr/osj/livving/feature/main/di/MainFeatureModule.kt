@@ -27,6 +27,9 @@ val mainFeatureModule = module {
             completeCheckInUseCase = get(),
             toggleLateCheckInUseCase = get(),
             createGuardianInviteUseCase = get(),
+            getCurrentAuthSessionUseCase = get(),
+            getTodayCheckInUseCase = get(),
+            saveInitialUserSettingsUseCase = get(),
         )
     }
 }

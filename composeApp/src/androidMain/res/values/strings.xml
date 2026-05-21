@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Livving</string>
-    <string name="kakao_native_app_key">TODO_KAKAO_NATIVE_APP_KEY</string>
-    <string name="kakao_redirect_scheme">kakaoTODO_KAKAO_NATIVE_APP_KEY</string>
+    <string name="kakao_native_app_key">c37cffb47abdcddb86b83f5ce81fa328</string>
+    <string name="kakao_redirect_scheme">kakaoc37cffb47abdcddb86b83f5ce81fa328</string>
 </resources>

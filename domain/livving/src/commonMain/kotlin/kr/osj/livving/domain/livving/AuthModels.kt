@@ -16,3 +16,16 @@ data class KakaoLoginResult(
     val user: LivvingUser,
     val isNewUser: Boolean,
 )
+
+data class AuthSession(
+    val user: LivvingUser,
+    val hasCompletedInitialSetup: Boolean,
+)
+
+data class InitialUserSettings(
+    val deadline: String,
+    val delayMinutes: Int,
+    val pushEnabled: Boolean,
+    val relationPushEnabled: Boolean,
+    val missedPushEnabled: Boolean,
+)

@@ -4,10 +4,14 @@ import androidx.navigation3.runtime.NavKey
 import kr.osj.livving.domain.livving.CheckInStatus
 import kr.osj.livving.domain.livving.Guardian
 import kr.osj.livving.domain.livving.GuardianStatus
+import kr.osj.livving.domain.livving.LivvingUser
 import kr.osj.livving.feature.relations.RelationsTab
 import kotlinx.serialization.Serializable
 
 data class MainState(
+    val sessionChecked: Boolean = false,
+    val startRoute: MainRoute = MainRoute.Login,
+    val currentUser: LivvingUser? = null,
     val deadline: String = "08:30",
     val selectedDeadline: String = "08:30",
     val delayMinutes: Int = 5,

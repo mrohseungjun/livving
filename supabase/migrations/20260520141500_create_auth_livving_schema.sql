@@ -16,7 +16,7 @@ create table if not exists public.user_settings (
     missed_push_enabled boolean not null default true,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
-    constraint user_settings_delay_minutes_check check (delay_minutes > 0)
+    constraint user_settings_delay_minutes_check check (delay_minutes >= 0)
 );
 
 create table if not exists public.guardian_relations (

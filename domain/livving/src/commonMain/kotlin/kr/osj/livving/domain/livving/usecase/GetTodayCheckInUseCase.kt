@@ -1,0 +1,12 @@
+package kr.osj.livving.domain.livving.usecase
+
+import kr.osj.livving.domain.livving.CheckInCompletion
+import kr.osj.livving.domain.livving.repository.CheckInRepository
+
+class GetTodayCheckInUseCase(
+    private val repository: CheckInRepository,
+) {
+    suspend operator fun invoke(userId: String): CheckInCompletion? {
+        return repository.getTodayCheckIn(userId)
+    }
+}

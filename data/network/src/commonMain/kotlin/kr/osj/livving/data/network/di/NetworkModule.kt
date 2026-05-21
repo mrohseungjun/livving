@@ -17,7 +17,12 @@ import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
 val networkModule = module {
-    single { NetworkConfig() }
+    single {
+        NetworkConfig(
+            supabaseUrl = "https://tdeyfwpdmzklajgvwlbq.supabase.co",
+            supabaseAnonKey = "sb_publishable_8f6dIWqF1W13P-jm7dS78w_zflhqVts",
+        )
+    }
     single {
         Json {
             ignoreUnknownKeys = true

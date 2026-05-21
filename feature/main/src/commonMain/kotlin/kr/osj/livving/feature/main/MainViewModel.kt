@@ -2,8 +2,13 @@ package kr.osj.livving.feature.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kr.osj.livving.domain.livving.CheckInStatus
+import kr.osj.livving.domain.livving.InitialUserSettings
 import kr.osj.livving.domain.livving.usecase.CompleteCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.CreateGuardianInviteUseCase
+import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
+import kr.osj.livving.domain.livving.usecase.GetTodayCheckInUseCase
+import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,9 +19,16 @@ class MainViewModel(
     private val completeCheckInUseCase: CompleteCheckInUseCase,
     private val toggleLateCheckInUseCase: ToggleLateCheckInUseCase,
     private val createGuardianInviteUseCase: CreateGuardianInviteUseCase,
+    private val getCurrentAuthSessionUseCase: GetCurrentAuthSessionUseCase,
+    private val getTodayCheckInUseCase: GetTodayCheckInUseCase,
+    private val saveInitialUserSettingsUseCase: SaveInitialUserSettingsUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MainState())
     val state: StateFlow<MainState> = _state.asStateFlow()
+
+    init {
+        loadSession()
+    }
 
     fun onIntent(intent: MainIntent) {
         when (intent) {
@@ -38,14 +50,17 @@ class MainViewModel(
 
     private fun completeCheckIn() {
         viewModelScope.launch {
-            val completion = completeCheckInUseCase(DEFAULT_USER_ID)
-            update {
-                it.copy(
-                    checked = true,
-                    lastCheckedAt = completion.lastCheckedAt,
-                    status = completion.status,
-                )
-            }
+            val userId = _state.value.currentUser?.id ?: return@launch
+            runCatching { completeCheckInUseCase(userId) }
+                .onSuccess { completion ->
+                    update {
+                        it.copy(
+                            checked = true,
+                            lastCheckedAt = completion.lastCheckedAt,
+                            status = completion.status,
+                        )
+                    }
+                }
         }
     }
 
@@ -89,10 +104,78 @@ class MainViewModel(
 
     private fun createInvite() {
         viewModelScope.launch {
-            val guardian = createGuardianInviteUseCase(DEFAULT_USER_ID)
+            val userId = _state.value.currentUser?.id ?: return@launch
+            runCatching { createGuardianInviteUseCase(userId) }
+                .onSuccess { guardian ->
+                    update {
+                        it.copy(guardians = it.guardians + guardian)
+                    }
+                }
+        }
+    }
+
+    private fun loadSession() {
+        viewModelScope.launch {
+            val session = getCurrentAuthSessionUseCase()
+            val todayCheckIn = session?.user?.id
+                ?.let { userId -> runCatching { getTodayCheckInUseCase(userId) }.getOrNull() }
             update {
-                it.copy(guardians = it.guardians + guardian)
+                it.copy(
+                    sessionChecked = true,
+                    currentUser = session?.user,
+                    startRoute = when {
+                        session == null -> MainRoute.Login
+                        session.hasCompletedInitialSetup -> MainRoute.Home
+                        else -> MainRoute.Terms
+                    },
+                    checked = todayCheckIn != null,
+                    lastCheckedAt = todayCheckIn?.lastCheckedAt.orEmpty(),
+                    status = todayCheckIn?.status ?: CheckInStatus.Before,
+                )
             }
+        }
+    }
+
+    fun refreshSessionAfterLogin(onReady: (MainRoute) -> Unit) {
+        viewModelScope.launch {
+            val session = getCurrentAuthSessionUseCase()
+            val todayCheckIn = session?.user?.id
+                ?.let { userId -> runCatching { getTodayCheckInUseCase(userId) }.getOrNull() }
+            val route = when {
+                session == null -> MainRoute.Login
+                session.hasCompletedInitialSetup -> MainRoute.Home
+                else -> MainRoute.Terms
+            }
+            update {
+                it.copy(
+                    sessionChecked = true,
+                    currentUser = session?.user,
+                    startRoute = route,
+                    checked = todayCheckIn != null,
+                    lastCheckedAt = todayCheckIn?.lastCheckedAt.orEmpty(),
+                    status = todayCheckIn?.status ?: CheckInStatus.Before,
+                )
+            }
+            onReady(route)
+        }
+    }
+
+    fun saveInitialSettings(onSaved: () -> Unit) {
+        viewModelScope.launch {
+            val current = _state.value
+            val userId = current.currentUser?.id ?: return@launch
+            saveInitialUserSettingsUseCase(
+                userId = userId,
+                settings = InitialUserSettings(
+                    deadline = current.deadline,
+                    delayMinutes = current.delayMinutes,
+                    pushEnabled = current.pushEnabled,
+                    relationPushEnabled = current.relationPushEnabled,
+                    missedPushEnabled = current.missedPushEnabled,
+                ),
+            )
+            update { it.copy(startRoute = MainRoute.Home) }
+            onSaved()
         }
     }
 
@@ -100,7 +183,4 @@ class MainViewModel(
         _state.value = block(_state.value)
     }
 
-    private companion object {
-        const val DEFAULT_USER_ID = "demo-user"
-    }
 }

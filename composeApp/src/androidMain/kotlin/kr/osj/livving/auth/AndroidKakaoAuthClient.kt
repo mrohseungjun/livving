@@ -13,12 +13,16 @@ class AndroidKakaoAuthClient(
     private val context: Context,
 ) : KakaoAuthClient {
     override suspend fun login(): KakaoLoginToken = suspendCancellableCoroutine { continuation ->
+        val kakaoTalkAvailable = UserApiClient.instance.isKakaoTalkLoginAvailable(context)
+
         val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
             when {
                 error != null -> continuation.resumeWithException(error)
-                token?.idToken.isNullOrBlank() -> continuation.resumeWithException(
-                    IllegalStateException("카카오 ID 토큰을 가져오지 못했어요."),
-                )
+                token?.idToken.isNullOrBlank() -> {
+                    continuation.resumeWithException(
+                        IllegalStateException("카카오 ID 토큰을 가져오지 못했어요."),
+                    )
+                }
                 else -> continuation.resume(
                     KakaoLoginToken(
                         accessToken = token.accessToken,
@@ -28,8 +32,14 @@ class AndroidKakaoAuthClient(
             }
         }
 
-        if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
-            UserApiClient.instance.loginWithKakaoTalk(context, callback = callback)
+        if (kakaoTalkAvailable) {
+            UserApiClient.instance.loginWithKakaoTalk(context) { token, error ->
+                if (error == null) {
+                    callback(token, null)
+                } else {
+                    UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
+                }
+            }
         } else {
             UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
         }
