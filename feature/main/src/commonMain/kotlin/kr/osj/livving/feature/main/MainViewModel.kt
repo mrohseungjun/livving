@@ -1,12 +1,14 @@
 package kr.osj.livving.feature.main
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kr.osj.livving.domain.livving.usecase.CompleteCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.CreateGuardianInviteUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val completeCheckInUseCase: CompleteCheckInUseCase,
@@ -35,13 +37,15 @@ class MainViewModel(
     }
 
     private fun completeCheckIn() {
-        val completion = completeCheckInUseCase()
-        update {
-            it.copy(
-                checked = true,
-                lastCheckedAt = completion.lastCheckedAt,
-                status = completion.status,
-            )
+        viewModelScope.launch {
+            val completion = completeCheckInUseCase(DEFAULT_USER_ID)
+            update {
+                it.copy(
+                    checked = true,
+                    lastCheckedAt = completion.lastCheckedAt,
+                    status = completion.status,
+                )
+            }
         }
     }
 
@@ -84,12 +88,19 @@ class MainViewModel(
     }
 
     private fun createInvite() {
-        update {
-            it.copy(guardians = createGuardianInviteUseCase(it.guardians))
+        viewModelScope.launch {
+            val guardian = createGuardianInviteUseCase(DEFAULT_USER_ID)
+            update {
+                it.copy(guardians = it.guardians + guardian)
+            }
         }
     }
 
     private inline fun update(block: (MainState) -> MainState) {
         _state.value = block(_state.value)
+    }
+
+    private companion object {
+        const val DEFAULT_USER_ID = "demo-user"
     }
 }

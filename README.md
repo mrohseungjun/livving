@@ -35,6 +35,7 @@ graph TD
     composeApp --> feature_main[feature:main]
     composeApp --> core_ui[core:ui]
     composeApp --> domain_livving[domain:livving]
+    composeApp --> data_network[data:network]
 
     feature_main --> feature_auth[feature:auth]
     feature_main --> feature_home[feature:home]
@@ -55,7 +56,7 @@ graph TD
     feature_settings --> core_ui
     feature_splash --> core_ui
 
-    data_network[data:network]
+    core_platform[core:platform]
 ```
 
 ## 모듈 역할
@@ -63,7 +64,7 @@ graph TD
 - [`composeApp`](./composeApp/src): Android/iOS 앱 엔트리포인트와 앱 DI 조립을 담당합니다.
 - [`core/platform`](./core/platform/src): 플랫폼별 공통 추상화와 구현을 담당합니다.
 - [`core/ui`](./core/ui/src): livving 디자인 시스템, 테마, 공통 Compose 컴포넌트를 담당합니다.
-- [`data/network`](./data/network/src): Ktor 클라이언트 설정과 네트워크 DI 모듈을 담당합니다.
+- [`data/network`](./data/network/src): Ktorfit API 인터페이스, Ktor 클라이언트 설정, 네트워크 DI 모듈을 담당합니다.
 - [`domain/livving`](./domain/livving/src): livving 비즈니스 모델과 UseCase를 담당합니다.
 - [`feature/main`](./feature/main/src): 앱 셸, Navigation 3 route key/back stack, MVI 상태, Intent, 메인 ViewModel을 담당합니다.
 - [`feature/auth`](./feature/auth/src): 로그인, 약관 화면을 담당합니다.
@@ -82,6 +83,7 @@ graph TD
 ```text
 composeApp
  ├─ feature:main
+ ├─ data:network
  ├─ domain:livving
  └─ core:ui
 
@@ -101,6 +103,15 @@ screen feature
 ```
 
 화면 feature 모듈은 `MainState`, `MainIntent`, `MainRoute`를 직접 참조하지 않습니다. `feature:main`이 Navigation 3 entry에서 화면에 필요한 값과 콜백을 넘겨 조립합니다.
+
+## 네트워크
+
+네트워크 통신은 Ktorfit + Ktor Client를 사용합니다.
+
+- `data:network`는 `livving.ktorfit.client` 컨벤션 플러그인만 적용합니다.
+- `livving.ktorfit.client`는 build-logic에서 KSP, Ktorfit KSP processor, Ktorfit lib-light, Ktor Client 의존성을 설정합니다.
+- API는 `interface` + Ktorfit annotation으로 선언하고, Koin `networkModule`에서 `HttpClient`, `Ktorfit`, API 구현체를 `single`로 제공합니다.
+- Ktor 엔진은 Android `OkHttp`, iOS `Darwin`, JVM `CIO`로 분리합니다.
 
 ## Navigation 3
 
@@ -152,6 +163,7 @@ fun HomeScreen(
 - `livving.koin.core`: Koin core 의존성 설정
 - `livving.koin.compose`: Koin Compose 및 Koin ViewModel 의존성 설정
 - `livving.ktor.client`: Ktor 클라이언트와 플랫폼 엔진 의존성 설정
+- `livving.ktorfit.client`: KSP 플러그인, Ktorfit KSP processor, Ktorfit lib-light, Ktor 클라이언트 설정
 - `livving.coroutines`: Coroutines 의존성 설정
 - `livving.navigation3`: Navigation 3와 route key 직렬화 의존성 설정
 

@@ -12,6 +12,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,9 +32,17 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LoginScreen(
-    onStartClick: () -> Unit,
+    onLoginSuccess: () -> Unit,
     viewModel: LoginViewModel = koinViewModel(),
 ) {
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(state.user) {
+        if (state.user != null) {
+            onLoginSuccess()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -77,13 +88,30 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .height(56.dp)
                 .clip(RoundedCornerShape(18.dp))
-                .background(Color(0xFFFEE500))
-                .clickable(onClick = onStartClick),
+                .background(if (state.loading) Color(0xFFE5E5E5) else Color(0xFFFEE500))
+                .clickable(enabled = !state.loading) {
+                    viewModel.onIntent(LoginIntent.ClickKakao)
+                },
             contentAlignment = Alignment.Center,
         ) {
-            Text("카카오로 시작하기", color = Color.Black, fontSize = 17.sp, fontWeight = FontWeight.Black)
+            Text(
+                text = if (state.loading) "로그인 중..." else "카카오로 시작하기",
+                color = Color.Black,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Black,
+            )
         }
         Spacer(Modifier.height(12.dp))
+        state.errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = LivvingCoral,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(8.dp))
+        }
         LivvingCenterText(
             text = "로그인 시 약관과 개인정보처리방침에 동의하게 됩니다.",
             fontSize = 11,

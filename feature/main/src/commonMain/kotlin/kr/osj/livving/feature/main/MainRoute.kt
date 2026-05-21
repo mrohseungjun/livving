@@ -259,7 +259,7 @@ private fun MainEntryContent(
     when (route) {
         MainRoute.Splash -> Unit
         MainRoute.Login -> LoginScreen(
-            onStartClick = { onNavigate(MainRoute.Terms) },
+            onLoginSuccess = { onNavigate(MainRoute.Terms) },
         )
         MainRoute.Terms -> TermsScreen(
             state = AuthTermsState(

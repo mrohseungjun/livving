@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.kotlin.composeCompiler.gradlePlugin)
     implementation(libs.kotlin.serialization.gradlePlugin)
     implementation(libs.compose.gradlePlugin)
+    implementation(libs.ksp.gradlePlugin)
 }
 
 gradlePlugin {
@@ -87,6 +88,14 @@ gradlePlugin {
             id = "livving.ktor.client"
             implementationClass = "KtorClientConventionPlugin"
         }
+        register("ktorfitClient") {
+            id = "livving.ktorfit.client"
+            implementationClass = "KtorfitClientConventionPlugin"
+        }
+        register("supabaseClient") {
+            id = "livving.supabase.client"
+            implementationClass = "SupabaseClientConventionPlugin"
+        }
         register("coroutines") {
             id = "livving.coroutines"
             implementationClass = "CoroutinesConventionPlugin"
@@ -94,6 +103,10 @@ gradlePlugin {
         register("navigation3") {
             id = "livving.navigation3"
             implementationClass = "Navigation3ConventionPlugin"
+        }
+        register("kakaoAndroid") {
+            id = "livving.kakao.android"
+            implementationClass = "KakaoAndroidConventionPlugin"
         }
     }
 }

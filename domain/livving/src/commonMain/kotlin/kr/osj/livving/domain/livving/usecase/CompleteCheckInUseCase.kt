@@ -1,11 +1,12 @@
 package kr.osj.livving.domain.livving.usecase
 
 import kr.osj.livving.domain.livving.CheckInCompletion
-import kr.osj.livving.domain.livving.CheckInStatus
+import kr.osj.livving.domain.livving.repository.CheckInRepository
 
-class CompleteCheckInUseCase {
-    operator fun invoke(): CheckInCompletion = CheckInCompletion(
-        lastCheckedAt = "오늘 08:25",
-        status = CheckInStatus.Done,
-    )
+class CompleteCheckInUseCase(
+    private val repository: CheckInRepository,
+) {
+    suspend operator fun invoke(userId: String): CheckInCompletion {
+        return repository.completeCheckIn(userId)
+    }
 }

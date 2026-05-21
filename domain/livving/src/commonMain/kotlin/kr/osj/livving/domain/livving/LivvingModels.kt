@@ -5,6 +5,7 @@ data class Guardian(
     val name: String,
     val relation: String,
     val status: GuardianStatus,
+    val inviteCode: String? = null,
 )
 
 data class CheckInCompletion(
