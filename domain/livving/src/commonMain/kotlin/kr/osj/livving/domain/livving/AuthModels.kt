@@ -20,6 +20,7 @@ data class KakaoLoginResult(
 data class AuthSession(
     val user: LivvingUser,
     val hasCompletedInitialSetup: Boolean,
+    val settings: InitialUserSettings? = null,
 )
 
 data class InitialUserSettings(

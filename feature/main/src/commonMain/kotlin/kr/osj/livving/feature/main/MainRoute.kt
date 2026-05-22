@@ -73,6 +73,7 @@ private val mainNavigationStateConfiguration = SavedStateConfiguration {
 @Composable
 fun MainRoute(
     initialInviteCode: String? = null,
+    onShareText: (String) -> Unit = {},
     viewModel: MainViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -105,6 +106,7 @@ fun MainRoute(
         onBack = { backStack.popOrReplace(MainRoute.Home) },
         onLoginSuccess = { onReady -> viewModel.refreshSessionAfterLogin(onReady) },
         onSaveInitialSettings = { onSaved -> viewModel.saveInitialSettings(onSaved) },
+        onShareText = onShareText,
     )
 }
 
@@ -118,6 +120,7 @@ fun MainScreen(
     onBack: () -> Unit,
     onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
     onSaveInitialSettings: (() -> Unit) -> Unit,
+    onShareText: (String) -> Unit,
 ) {
     MainNavDisplay(
         state = state,
@@ -128,6 +131,7 @@ fun MainScreen(
         onBack = onBack,
         onLoginSuccess = onLoginSuccess,
         onSaveInitialSettings = onSaveInitialSettings,
+        onShareText = onShareText,
     )
 }
 
@@ -141,70 +145,71 @@ private fun MainNavDisplay(
     onBack: () -> Unit,
     onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
     onSaveInitialSettings: (() -> Unit) -> Unit,
+    onShareText: (String) -> Unit,
 ) {
     NavDisplay(
         backStack = backStack,
         onBack = onBack,
         entryProvider = entryProvider {
             entry<MainRoute.Splash> {
-                MainEntry(MainRoute.Splash, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Splash, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Login> {
-                MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Terms> {
-                MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.SetupDeadline> {
-                MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.SetupDelay> {
-                MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Home> {
-                MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.History> {
-                MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Relations> {
-                MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Invite> {
-                MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.InviteStatus> {
-                MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.GuardianDetail> {
-                MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Notifications> {
-                MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Alert> {
-                MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Request> {
-                MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Settings> {
-                MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Schedule> {
-                MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Profile> {
-                MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.Privacy> {
-                MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.DeadlineChange> {
-                MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
             entry<MainRoute.DelaySetting> {
-                MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings)
+                MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onShareText)
             }
         },
     )
@@ -220,6 +225,7 @@ private fun MainEntry(
     onBack: () -> Unit,
     onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
     onSaveInitialSettings: (() -> Unit) -> Unit,
+    onShareText: (String) -> Unit,
 ) {
     when (route) {
         MainRoute.Splash -> SplashScreen(
@@ -242,6 +248,7 @@ private fun MainEntry(
                 onBack = onBack,
                 onLoginSuccess = onLoginSuccess,
                 onSaveInitialSettings = onSaveInitialSettings,
+                onShareText = onShareText,
             )
         }
     }
@@ -293,6 +300,7 @@ private fun MainEntryContent(
     onBack: () -> Unit,
     onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
     onSaveInitialSettings: (() -> Unit) -> Unit,
+    onShareText: (String) -> Unit,
 ) {
     when (route) {
         MainRoute.Splash -> Unit
@@ -368,15 +376,29 @@ private fun MainEntryContent(
                         RelationGuardianStatus.Accepted
                     },
                 )
-            } + state.activeInvites.map { invite ->
-                RelationGuardianUiModel(
-                    id = invite.id.hashCode().toLong(),
-                    name = "초대 링크",
-                    relation = invite.inviteLink,
-                    status = RelationGuardianStatus.Pending,
+            },
+            watchingUsers = state.watchingUsers.map { user ->
+                val status = when (user.status) {
+                    CheckInStatus.Done -> WatchingState.Safe
+                    CheckInStatus.Late -> WatchingState.Missed
+                    CheckInStatus.Before -> WatchingState.Waiting
+                }
+                WatchingUserUiModel(
+                    id = user.id.hashCode().toLong(),
+                    name = user.name,
+                    state = status,
+                    text = when (status) {
+                        WatchingState.Safe -> "오늘 안부 확인 완료"
+                        WatchingState.Waiting -> "아직 안부 확인 전"
+                        WatchingState.Missed -> "안부 미확인"
+                    },
+                    sub = when (status) {
+                        WatchingState.Safe -> user.lastCheckedAt.ifBlank { "오늘 확인" }
+                        WatchingState.Waiting -> "마감 대기 중"
+                        WatchingState.Missed -> "보호자 알림 대상"
+                    },
                 )
             },
-            watchingUsers = seedWatchingUsers,
             deadline = state.deadline,
             alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
             onMyGuardiansClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.MyGuardians)) },
@@ -401,10 +423,18 @@ private fun MainEntryContent(
         )
         MainRoute.Invite -> InviteScreen(
             inviteLink = state.activeInvites.firstOrNull()?.inviteLink,
-            pendingCount = state.activeInvites.size,
+            pendingCount = state.guardians.count { it.status == GuardianStatus.Pending },
             acceptedCount = state.guardians.count { it.status == GuardianStatus.Accepted },
             onBackClick = onBack,
             onCreateInviteClick = { onIntent(MainIntent.CreateInvite) },
+            onShareInviteClick = {
+                val inviteLink = state.activeInvites.firstOrNull()?.inviteLink
+                if (inviteLink == null) {
+                    onIntent(MainIntent.CreateInvite)
+                } else {
+                    onShareText("livving 보호자 초대 링크\n$inviteLink")
+                }
+            },
         )
         MainRoute.InviteStatus -> InviteStatusScreen(onBackClick = onBack)
         MainRoute.GuardianDetail -> GuardianDetailScreen(
@@ -529,9 +559,3 @@ private fun MainRoute.activeTab(): String = when (this) {
     MainRoute.DelaySetting -> "settings"
     else -> "home"
 }
-
-private val seedWatchingUsers = listOf(
-    WatchingUserUiModel(1, "오승준", WatchingState.Safe, "오늘 안부 확인 완료", "08:25 확인"),
-    WatchingUserUiModel(2, "김영희", WatchingState.Waiting, "아직 안부 확인 전", "마감 대기 중"),
-    WatchingUserUiModel(3, "박민수", WatchingState.Missed, "안부 미확인", "보호자 알림 발송"),
-)

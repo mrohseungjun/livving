@@ -41,6 +41,7 @@ class SupabaseAuthRepository(
         return AuthSession(
             user = profile.toDomain(),
             hasCompletedInitialSetup = settings.isNotEmpty(),
+            settings = settings.firstOrNull()?.toDomain(),
         )
     }
 
@@ -108,5 +109,13 @@ class SupabaseAuthRepository(
         kakaoId = kakaoId,
         nickname = nickname,
         profileImageUrl = profileImageUrl,
+    )
+
+    private fun UserSettingsDto.toDomain(): InitialUserSettings = InitialUserSettings(
+        deadline = deadlineTime.take(5),
+        delayMinutes = delayMinutes,
+        pushEnabled = pushEnabled,
+        relationPushEnabled = relationPushEnabled,
+        missedPushEnabled = missedPushEnabled,
     )
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kr.osj.livving.core.ui.LivvingCard
@@ -35,6 +36,7 @@ fun InviteScreen(
     acceptedCount: Int,
     onBackClick: () -> Unit,
     onCreateInviteClick: () -> Unit,
+    onShareInviteClick: () -> Unit,
     viewModel: InviteViewModel = koinViewModel(),
 ) {
     LivvingHeader(
@@ -54,7 +56,7 @@ fun InviteScreen(
     Spacer(Modifier.height(18.dp))
     LivvingMenuRow("그룹 초대 링크 생성", "보호자 여러 명이 같은 링크로 참여", "↗", onClick = onCreateInviteClick)
     Spacer(Modifier.height(14.dp))
-    LivvingMenuRow("카카오톡 단톡방에 공유", "가족/친구 방에 링크 한 번 전송", "톡", onClick = onCreateInviteClick)
+    LivvingMenuRow("카카오톡 단톡방에 공유", "가족/친구 방에 링크 한 번 전송", "톡", onClick = onShareInviteClick)
     Spacer(Modifier.height(24.dp))
     LivvingCard {
         Column(Modifier.padding(18.dp)) {
@@ -70,7 +72,14 @@ fun InviteScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(inviteLink ?: "아직 생성된 링크가 없어요", color = LivvingCoral, fontWeight = FontWeight.Black)
+                Text(
+                    text = inviteLink ?: "아직 생성된 링크가 없어요",
+                    modifier = Modifier.weight(1f),
+                    color = LivvingCoral,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Text("복사", color = LivvingMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }

@@ -8,6 +8,7 @@ import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
 import kr.osj.livving.domain.livving.usecase.GetGuardianInviteRequestUseCase
 import kr.osj.livving.domain.livving.usecase.GetMyGuardiansUseCase
 import kr.osj.livving.domain.livving.usecase.GetTodayCheckInUseCase
+import kr.osj.livving.domain.livving.usecase.GetWatchingUsersUseCase
 import kr.osj.livving.domain.livving.usecase.LoginWithKakaoUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
@@ -18,6 +19,7 @@ val livvingDomainModule = module {
     factory { ToggleLateCheckInUseCase() }
     factory { CreateGuardianInviteUseCase(get()) }
     factory { GetMyGuardiansUseCase(get()) }
+    factory { GetWatchingUsersUseCase(get()) }
     factory { GetActiveInviteLinksUseCase(get()) }
     factory { GetGuardianInviteRequestUseCase(get()) }
     factory { AcceptGuardianInviteUseCase(get()) }

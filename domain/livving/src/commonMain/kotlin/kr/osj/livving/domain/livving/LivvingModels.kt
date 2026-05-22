@@ -21,6 +21,13 @@ data class GuardianInviteRequest(
     val ownerName: String,
 )
 
+data class WatchingUser(
+    val id: String,
+    val name: String,
+    val status: CheckInStatus = CheckInStatus.Before,
+    val lastCheckedAt: String = "",
+)
+
 data class CheckInCompletion(
     val lastCheckedAt: String,
     val status: CheckInStatus,

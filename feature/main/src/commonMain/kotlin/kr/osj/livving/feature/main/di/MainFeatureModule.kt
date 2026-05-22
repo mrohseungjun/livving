@@ -31,6 +31,7 @@ val mainFeatureModule = module {
             getActiveInviteLinksUseCase = get(),
             getGuardianInviteRequestUseCase = get(),
             acceptGuardianInviteUseCase = get(),
+            getWatchingUsersUseCase = get(),
             getCurrentAuthSessionUseCase = get(),
             getTodayCheckInUseCase = get(),
             saveInitialUserSettingsUseCase = get(),

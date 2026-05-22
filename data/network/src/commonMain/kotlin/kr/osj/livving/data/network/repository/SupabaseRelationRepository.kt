@@ -12,6 +12,7 @@ import kr.osj.livving.domain.livving.Guardian
 import kr.osj.livving.domain.livving.GuardianInvite
 import kr.osj.livving.domain.livving.GuardianInviteRequest
 import kr.osj.livving.domain.livving.GuardianStatus
+import kr.osj.livving.domain.livving.WatchingUser
 import kr.osj.livving.domain.livving.repository.RelationRepository
 
 class SupabaseRelationRepository(
@@ -28,6 +29,35 @@ class SupabaseRelationRepository(
             .map { dto -> dto.toDomain() }
     }
 
+    override suspend fun getWatchingUsers(guardianUserId: String): List<WatchingUser> {
+        val relations = client.from("guardian_relations")
+            .select {
+                filter {
+                    filter("guardian_user_id", FilterOperator.EQ, guardianUserId)
+                    filter("status", FilterOperator.EQ, "accepted")
+                }
+            }
+            .decodeList<GuardianRelationDto>()
+
+        return relations.mapNotNull { relation ->
+            val profile = client.from("profiles")
+                .select {
+                    filter {
+                        filter("id", FilterOperator.EQ, relation.userId)
+                    }
+                }
+                .decodeList<ProfileDto>()
+                .firstOrNull()
+
+            profile?.let {
+                WatchingUser(
+                    id = it.id,
+                    name = it.nickname,
+                )
+            }
+        }
+    }
+
     override suspend fun getActiveInviteLinks(userId: String): List<GuardianInvite> {
         return client.from("invite_links")
             .select {
@@ -41,6 +71,11 @@ class SupabaseRelationRepository(
     }
 
     override suspend fun createGuardianInvite(userId: String): GuardianInvite {
+        val activeInvite = getActiveInviteLinks(userId).firstOrNull()
+        if (activeInvite != null) {
+            return activeInvite
+        }
+
         val invite = client.from("invite_links")
             .insert(mapOf("owner_user_id" to userId)) {
                 select()

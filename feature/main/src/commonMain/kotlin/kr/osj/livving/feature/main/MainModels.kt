@@ -7,6 +7,7 @@ import kr.osj.livving.domain.livving.GuardianInvite
 import kr.osj.livving.domain.livving.GuardianInviteRequest
 import kr.osj.livving.domain.livving.GuardianStatus
 import kr.osj.livving.domain.livving.LivvingUser
+import kr.osj.livving.domain.livving.WatchingUser
 import kr.osj.livving.feature.relations.RelationsTab
 import kotlinx.serialization.Serializable
 
@@ -21,6 +22,7 @@ data class MainState(
     val lastCheckedAt: String = "",
     val status: CheckInStatus = CheckInStatus.Before,
     val guardians: List<Guardian> = emptyList(),
+    val watchingUsers: List<WatchingUser> = emptyList(),
     val activeInvites: List<GuardianInvite> = emptyList(),
     val inviteRequest: GuardianInviteRequest? = null,
     val pendingInviteCode: String? = null,

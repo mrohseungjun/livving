@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.kakao.sdk.common.KakaoSdk
 import kr.osj.livving.auth.AndroidKakaoAuthContext
+import kr.osj.livving.core.platform.AndroidTextShareContext
 
 class MainActivity : ComponentActivity() {
     private var inviteCode by mutableStateOf<String?>(null)
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         AndroidKakaoAuthContext.initialize(this)
+        AndroidTextShareContext.initialize(this)
         KakaoSdk.init(this, getString(R.string.kakao_native_app_key))
         inviteCode = intent.extractInviteCode()
 
