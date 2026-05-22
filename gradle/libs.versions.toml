@@ -23,7 +23,8 @@ ksp = "2.3.4"
 material3 = "1.10.0-alpha05"
 supabase = "3.2.4"
 kakao = "2.23.4"
-firebase-bom = "34.6.0"
+firebase-bom = "34.13.0"
+google-services = "4.4.4"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -67,6 +68,7 @@ supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt", versi
 kakao-user = { module = "com.kakao.sdk:v2-user", version.ref = "kakao" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+google-services-gradlePlugin = { module = "com.google.gms:google-services", version.ref = "google-services" }
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-composeCompiler-gradlePlugin = { module = "org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin", version.ref = "kotlin" }

@@ -36,6 +36,7 @@ dependencies {
     implementation(libs.kotlin.serialization.gradlePlugin)
     implementation(libs.compose.gradlePlugin)
     implementation(libs.ksp.gradlePlugin)
+    implementation(libs.google.services.gradlePlugin)
 }
 
 gradlePlugin {
@@ -111,6 +112,10 @@ gradlePlugin {
         register("firebaseMessaging") {
             id = "livving.firebase.messaging"
             implementationClass = "FirebaseMessagingConventionPlugin"
+        }
+        register("googleServices") {
+            id = "livving.google.services"
+            implementationClass = "GoogleServicesConventionPlugin"
         }
     }
 }
