@@ -85,12 +85,6 @@ fun MainRoute(
         }
     }
 
-    LaunchedEffect(state.sessionChecked, state.startRoute) {
-        if (state.sessionChecked && backStack.lastOrNull() == MainRoute.Splash) {
-            backStack.replaceWith(state.startRoute)
-        }
-    }
-
     LaunchedEffect(state.inviteRequest) {
         if (state.inviteRequest != null && backStack.lastOrNull() != MainRoute.Request) {
             backStack.navigateTo(MainRoute.Request)
@@ -229,10 +223,9 @@ private fun MainEntry(
 ) {
     when (route) {
         MainRoute.Splash -> SplashScreen(
+            canFinish = state.sessionChecked,
             onFinished = {
-                if (state.sessionChecked) {
-                    onReplace(state.startRoute)
-                }
+                onReplace(state.startRoute)
             },
         )
         else -> MainEntryContainer(
@@ -353,7 +346,7 @@ private fun MainEntryContent(
             deadline = state.deadline,
             delayMinutes = state.delayMinutes,
             checked = state.checked,
-            lastCheckedAt = state.lastCheckedAt,
+            lastCheckedAt = formatLastCheckedAt(state.lastCheckedAt),
             late = state.status == CheckInStatus.Late,
             acceptedGuardianNames = state.guardians.filter { it.status == GuardianStatus.Accepted }.map { it.name },
             onNotificationClick = { onNavigate(MainRoute.Notifications) },
@@ -393,7 +386,7 @@ private fun MainEntryContent(
                         WatchingState.Missed -> "안부 미확인"
                     },
                     sub = when (status) {
-                        WatchingState.Safe -> user.lastCheckedAt.ifBlank { "오늘 확인" }
+                        WatchingState.Safe -> formatLastCheckedAt(user.lastCheckedAt).ifBlank { "오늘 확인" }
                         WatchingState.Waiting -> "마감 대기 중"
                         WatchingState.Missed -> "보호자 알림 대상"
                     },
@@ -559,3 +552,38 @@ private fun MainRoute.activeTab(): String = when (this) {
     MainRoute.DelaySetting -> "settings"
     else -> "home"
 }
+
+private fun formatLastCheckedAt(value: String): String {
+    if (value.isBlank()) return ""
+    if (value.length < 16 || value[10] != 'T') return value
+
+    val year = value.substring(0, 4).toIntOrNull() ?: return value
+    var month = value.substring(5, 7).toIntOrNull() ?: return value
+    var day = value.substring(8, 10).toIntOrNull() ?: return value
+    var hour = value.substring(11, 13).toIntOrNull() ?: return value
+    val minute = value.substring(14, 16).toIntOrNull() ?: return value
+
+    if (value.endsWith("+00:00") || value.endsWith("Z")) {
+        hour += 9
+        if (hour >= 24) {
+            hour -= 24
+            day += 1
+            val lastDay = daysInMonth(year, month)
+            if (day > lastDay) {
+                day = 1
+                month += 1
+            }
+        }
+    }
+
+    return "${month}월 ${day}일 ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+}
+
+private fun daysInMonth(year: Int, month: Int): Int = when (month) {
+    1, 3, 5, 7, 8, 10, 12 -> 31
+    4, 6, 9, 11 -> 30
+    2 -> if (year.isLeapYear()) 29 else 28
+    else -> 31
+}
+
+private fun Int.isLeapYear(): Boolean = this % 4 == 0 && (this % 100 != 0 || this % 400 == 0)

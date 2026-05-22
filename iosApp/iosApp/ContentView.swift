@@ -1,6 +1,7 @@
 import UIKit
 import SwiftUI
 import ComposeApp
+import KakaoSDKAuth
 
 struct ComposeView: UIViewControllerRepresentable {
     let inviteCode: String?
@@ -20,6 +21,10 @@ struct ContentView: View {
             .id(inviteCode)
             .ignoresSafeArea()
             .onOpenURL { url in
+                if AuthApi.isKakaoTalkLoginUrl(url) {
+                    _ = AuthController.handleOpenUrl(url: url)
+                    return
+                }
                 inviteCode = url.livvingInviteCode
             }
     }

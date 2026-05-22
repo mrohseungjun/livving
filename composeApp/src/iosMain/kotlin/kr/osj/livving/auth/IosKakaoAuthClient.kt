@@ -5,8 +5,18 @@ import kr.osj.livving.domain.livving.repository.KakaoAuthClient
 
 class IosKakaoAuthClient : KakaoAuthClient {
     override suspend fun login(): KakaoLoginToken {
-        throw UnsupportedOperationException("iOS Kakao SDK 연결이 아직 필요합니다.")
+        return requireNotNull(iosKakaoAuthClient) {
+            "iOS Kakao SDK client must be installed before starting Koin."
+        }.login()
     }
 
-    override suspend fun logout() = Unit
+    override suspend fun logout() {
+        iosKakaoAuthClient?.logout()
+    }
+}
+
+private var iosKakaoAuthClient: KakaoAuthClient? = null
+
+fun installIosKakaoAuthClient(client: KakaoAuthClient) {
+    iosKakaoAuthClient = client
 }

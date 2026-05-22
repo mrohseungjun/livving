@@ -32,6 +32,6 @@ class SplashViewModel : ViewModel() {
     }
 
     private companion object {
-        const val SPLASH_DURATION_MILLIS = 1_200L
+        const val SPLASH_DURATION_MILLIS = 2_000L
     }
 }

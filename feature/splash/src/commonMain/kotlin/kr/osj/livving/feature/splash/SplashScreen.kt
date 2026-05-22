@@ -26,6 +26,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SplashScreen(
+    canFinish: Boolean,
     onFinished: () -> Unit,
     viewModel: SplashViewModel = koinViewModel(),
 ) {
@@ -39,8 +40,8 @@ fun SplashScreen(
         scale.animateTo(1f, tween(durationMillis = 360))
     }
 
-    LaunchedEffect(state.isFinished) {
-        if (state.isFinished) {
+    LaunchedEffect(state.isFinished, canFinish) {
+        if (state.isFinished && canFinish) {
             onFinished()
         }
     }

@@ -565,6 +565,7 @@ fun LivvingCenterText(
     modifier: Modifier = Modifier,
     fontSize: Int = 16,
     color: Color = LivvingText,
+    fontWeight: FontWeight = FontWeight.Bold,
 ) {
     Text(
         modifier = modifier.fillMaxWidth(),
@@ -573,6 +574,7 @@ fun LivvingCenterText(
         fontSize = fontSize.sp,
         lineHeight = (fontSize + 7).sp,
         color = color,
+        fontWeight = fontWeight,
     )
 }
 
