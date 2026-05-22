@@ -364,68 +364,73 @@ private fun MainEntryContent(
             onToggleLateClick = { onIntent(MainIntent.ToggleLateState) },
         )
         MainRoute.History -> HistoryScreen(onBackClick = onBack)
-        MainRoute.Relations -> RelationsScreen(
-            selectedTab = state.relationTab,
-            guardians = state.guardians.map { guardian ->
-                RelationGuardianUiModel(
-                    id = guardian.id,
-                    name = guardian.name,
-                    relation = guardian.relation,
-                    status = if (guardian.status == GuardianStatus.Pending) {
-                        RelationGuardianStatus.Pending
+        MainRoute.Relations -> {
+            LaunchedEffect(state.currentUser?.id) {
+                onIntent(MainIntent.RefreshRelations)
+            }
+            RelationsScreen(
+                selectedTab = state.relationTab,
+                guardians = state.guardians.map { guardian ->
+                    RelationGuardianUiModel(
+                        id = guardian.id,
+                        name = guardian.name,
+                        relation = guardian.relation,
+                        status = if (guardian.status == GuardianStatus.Pending) {
+                            RelationGuardianStatus.Pending
+                        } else {
+                            RelationGuardianStatus.Accepted
+                        },
+                    )
+                },
+                watchingUsers = state.watchingUsers.map { user ->
+                    val status = when (user.status) {
+                        CheckInStatus.Done -> WatchingState.Safe
+                        CheckInStatus.Late -> WatchingState.Missed
+                        CheckInStatus.Before -> WatchingState.Waiting
+                    }
+                    WatchingUserUiModel(
+                        id = user.id.hashCode().toLong(),
+                        name = user.name,
+                        state = status,
+                        text = when (status) {
+                            WatchingState.Safe -> "오늘 안부 확인 완료"
+                            WatchingState.Waiting -> "아직 안부 확인 전"
+                            WatchingState.Missed -> "안부 미확인"
+                        },
+                        sub = when (status) {
+                            WatchingState.Safe -> formatLastCheckedAt(user.lastCheckedAt).ifBlank { "오늘 확인" }
+                            WatchingState.Waiting -> "마감 대기 중"
+                            WatchingState.Missed -> "보호자 알림 대상"
+                        },
+                    )
+                },
+                deadline = state.deadline,
+                alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
+                manualInviteCode = state.manualInviteCode,
+                manualInviteError = state.manualInviteError,
+                onMyGuardiansClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.MyGuardians)) },
+                onWatchingClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.Watching)) },
+                onGuardianClick = { guardian ->
+                    onNavigate(
+                        if (guardian.status == RelationGuardianStatus.Pending) {
+                            MainRoute.InviteStatus
+                        } else {
+                            MainRoute.GuardianDetail
+                        },
+                    )
+                },
+                onInviteClick = { onNavigate(MainRoute.Invite) },
+                onManualInviteCodeChange = { onIntent(MainIntent.ChangeManualInviteCode(it)) },
+                onManualInviteSubmit = { onIntent(MainIntent.SubmitManualInviteCode) },
+                onWatchingUserClick = { user ->
+                    if (user.state == WatchingState.Missed) {
+                        onNavigate(MainRoute.Alert)
                     } else {
-                        RelationGuardianStatus.Accepted
-                    },
-                )
-            },
-            watchingUsers = state.watchingUsers.map { user ->
-                val status = when (user.status) {
-                    CheckInStatus.Done -> WatchingState.Safe
-                    CheckInStatus.Late -> WatchingState.Missed
-                    CheckInStatus.Before -> WatchingState.Waiting
-                }
-                WatchingUserUiModel(
-                    id = user.id.hashCode().toLong(),
-                    name = user.name,
-                    state = status,
-                    text = when (status) {
-                        WatchingState.Safe -> "오늘 안부 확인 완료"
-                        WatchingState.Waiting -> "아직 안부 확인 전"
-                        WatchingState.Missed -> "안부 미확인"
-                    },
-                    sub = when (status) {
-                        WatchingState.Safe -> formatLastCheckedAt(user.lastCheckedAt).ifBlank { "오늘 확인" }
-                        WatchingState.Waiting -> "마감 대기 중"
-                        WatchingState.Missed -> "보호자 알림 대상"
-                    },
-                )
-            },
-            deadline = state.deadline,
-            alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
-            manualInviteCode = state.manualInviteCode,
-            manualInviteError = state.manualInviteError,
-            onMyGuardiansClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.MyGuardians)) },
-            onWatchingClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.Watching)) },
-            onGuardianClick = { guardian ->
-                onNavigate(
-                    if (guardian.status == RelationGuardianStatus.Pending) {
-                        MainRoute.InviteStatus
-                    } else {
-                        MainRoute.GuardianDetail
-                    },
-                )
-            },
-            onInviteClick = { onNavigate(MainRoute.Invite) },
-            onManualInviteCodeChange = { onIntent(MainIntent.ChangeManualInviteCode(it)) },
-            onManualInviteSubmit = { onIntent(MainIntent.SubmitManualInviteCode) },
-            onWatchingUserClick = { user ->
-                if (user.state == WatchingState.Missed) {
-                    onNavigate(MainRoute.Alert)
-                } else {
-                    onReplace(MainRoute.Home)
-                }
-            },
-        )
+                        onReplace(MainRoute.Home)
+                    }
+                },
+            )
+        }
         MainRoute.Invite -> InviteScreen(
             inviteCode = state.activeInvites.firstOrNull()?.inviteCode,
             inviteLink = state.activeInvites.firstOrNull()?.inviteLink,

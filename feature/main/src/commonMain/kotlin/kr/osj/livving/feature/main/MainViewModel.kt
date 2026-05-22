@@ -52,6 +52,7 @@ class MainViewModel(
             is MainIntent.ToggleTerms -> toggleTerms(intent.item)
             MainIntent.ToggleAllTerms -> toggleAllTerms()
             is MainIntent.SelectRelationTab -> update { it.copy(relationTab = intent.tab) }
+            MainIntent.RefreshRelations -> refreshRelations()
             MainIntent.CreateInvite -> createInvite()
             is MainIntent.ChangeManualInviteCode -> update {
                 it.copy(
@@ -134,6 +135,22 @@ class MainViewModel(
                         it.copy(activeInvites = listOf(invite))
                     }
                 }
+        }
+    }
+
+    private fun refreshRelations() {
+        viewModelScope.launch {
+            val userId = _state.value.currentUser?.id ?: return@launch
+            val guardians = runCatching { getMyGuardiansUseCase(userId) }.getOrNull().orEmpty()
+            val watchingUsers = loadWatchingUsers(userId)
+            val activeInvites = runCatching { getActiveInviteLinksUseCase(userId) }.getOrNull().orEmpty()
+            update {
+                it.copy(
+                    guardians = guardians,
+                    watchingUsers = watchingUsers,
+                    activeInvites = activeInvites,
+                )
+            }
         }
     }
 
@@ -297,10 +314,14 @@ class MainViewModel(
             val inviteCode = _state.value.inviteRequest?.inviteCode ?: return@launch
             runCatching { acceptGuardianInviteUseCase(inviteCode, userId) }
                 .onSuccess {
+                    val guardians = runCatching { getMyGuardiansUseCase(userId) }.getOrNull().orEmpty()
                     val watchingUsers = loadWatchingUsers(userId)
+                    val activeInvites = runCatching { getActiveInviteLinksUseCase(userId) }.getOrNull().orEmpty()
                     update {
                         it.copy(
+                            guardians = guardians,
                             watchingUsers = watchingUsers,
+                            activeInvites = activeInvites,
                             inviteRequest = null,
                             pendingInviteCode = null,
                             relationTab = kr.osj.livving.feature.relations.RelationsTab.Watching,
