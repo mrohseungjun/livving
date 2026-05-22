@@ -35,6 +35,23 @@ data class CheckInCompletion(
     val status: CheckInStatus,
 )
 
+data class PushTokenRegistration(
+    val token: String,
+    val platform: String,
+    val deviceId: String? = null,
+)
+
+data class LivvingNotification(
+    val id: String,
+    val type: LivvingNotificationType,
+    val title: String,
+    val body: String,
+    val createdAt: String,
+    val actorUserId: String? = null,
+    val relatedUserId: String? = null,
+    val readAt: String? = null,
+)
+
 enum class CheckInStatus {
     Before,
     Late,
@@ -44,4 +61,11 @@ enum class CheckInStatus {
 enum class GuardianStatus {
     Accepted,
     Pending,
+}
+
+enum class LivvingNotificationType {
+    MissedCheckIn,
+    GuardianRequest,
+    RelationAccepted,
+    Unknown,
 }

@@ -8,9 +8,12 @@ import kr.osj.livving.domain.livving.usecase.GetActiveInviteLinksUseCase
 import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
 import kr.osj.livving.domain.livving.usecase.GetGuardianInviteRequestUseCase
 import kr.osj.livving.domain.livving.usecase.GetMyGuardiansUseCase
+import kr.osj.livving.domain.livving.usecase.GetNotificationsUseCase
 import kr.osj.livving.domain.livving.usecase.GetTodayCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.GetWatchingUsersUseCase
 import kr.osj.livving.domain.livving.usecase.LoginWithKakaoUseCase
+import kr.osj.livving.domain.livving.usecase.MarkNotificationReadUseCase
+import kr.osj.livving.domain.livving.usecase.RegisterPushTokenUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
 import kr.osj.livving.domain.livving.usecase.SavePhoneContactUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
@@ -31,4 +34,7 @@ val livvingDomainModule = module {
     factory { GetTodayCheckInUseCase(get()) }
     factory { SaveInitialUserSettingsUseCase(get()) }
     factory { SavePhoneContactUseCase(get()) }
+    factory { RegisterPushTokenUseCase(get()) }
+    factory { GetNotificationsUseCase(get()) }
+    factory { MarkNotificationReadUseCase(get()) }
 }

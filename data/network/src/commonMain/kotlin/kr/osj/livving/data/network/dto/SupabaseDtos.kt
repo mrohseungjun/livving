@@ -19,6 +19,29 @@ data class UserContactSettingDto(
 )
 
 @Serializable
+data class PushTokenDto(
+    @SerialName("user_id") val userId: String,
+    val token: String,
+    val platform: String,
+    @SerialName("device_id") val deviceId: String? = null,
+    val enabled: Boolean = true,
+)
+
+@Serializable
+data class NotificationEventDto(
+    val id: String,
+    @SerialName("recipient_user_id") val recipientUserId: String,
+    @SerialName("actor_user_id") val actorUserId: String? = null,
+    @SerialName("event_type") val eventType: String,
+    val title: String,
+    val body: String,
+    @SerialName("related_user_id") val relatedUserId: String? = null,
+    val status: String,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("read_at") val readAt: String? = null,
+)
+
+@Serializable
 data class GuardianRelationDto(
     val id: Long,
     @SerialName("user_id") val userId: String,

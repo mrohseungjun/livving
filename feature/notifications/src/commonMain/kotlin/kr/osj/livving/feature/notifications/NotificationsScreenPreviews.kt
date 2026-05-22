@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import kr.osj.livving.core.ui.LivvingScrollableScreen
 import kr.osj.livving.core.ui.LivvingTheme
+import kr.osj.livving.core.ui.LivvingTone
 
 @Preview
 @Composable
@@ -11,9 +12,18 @@ private fun NotificationsScreenPreview() {
     LivvingTheme {
         LivvingScrollableScreen {
             NotificationsScreen(
-                deadline = "08:30",
-                alertAt = "08:35",
-                onAlertClick = {},
+                notifications = listOf(
+                    NotificationUiModel(
+                        id = "1",
+                        title = "오승준님 안부 미확인",
+                        time = "08:35",
+                        desc = "08:30까지 안부 확인이 없었어요.",
+                        tone = LivvingTone.Red,
+                        read = false,
+                        opensAlert = true,
+                    ),
+                ),
+                onNotificationClick = {},
                 onRequestClick = {},
                 viewModel = NotificationsViewModel(),
             )

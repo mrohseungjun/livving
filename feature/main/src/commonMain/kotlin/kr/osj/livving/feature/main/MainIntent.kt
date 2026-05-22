@@ -19,6 +19,9 @@ sealed interface MainIntent {
     data class ChangePhoneNumber(val value: String) : MainIntent
     data object TogglePhoneCallEnabled : MainIntent
     data object SavePhoneContact : MainIntent
+    data class RegisterPushToken(val token: MainPushToken) : MainIntent
+    data object LoadNotifications : MainIntent
+    data class SelectNotification(val notificationId: String) : MainIntent
     data object CreateInvite : MainIntent
     data class ChangeManualInviteCode(val value: String) : MainIntent
     data object SubmitManualInviteCode : MainIntent

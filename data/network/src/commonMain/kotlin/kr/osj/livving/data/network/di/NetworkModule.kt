@@ -9,9 +9,11 @@ import kr.osj.livving.data.network.createLivvingSupabaseClient
 import kr.osj.livving.data.network.platformHttpClientEngineFactory
 import kr.osj.livving.data.network.repository.SupabaseAuthRepository
 import kr.osj.livving.data.network.repository.SupabaseCheckInRepository
+import kr.osj.livving.data.network.repository.SupabaseNotificationRepository
 import kr.osj.livving.data.network.repository.SupabaseRelationRepository
 import kr.osj.livving.domain.livving.repository.AuthRepository
 import kr.osj.livving.domain.livving.repository.CheckInRepository
+import kr.osj.livving.domain.livving.repository.NotificationRepository
 import kr.osj.livving.domain.livving.repository.RelationRepository
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
@@ -36,5 +38,6 @@ val networkModule = module {
     single<AuthRepository> { SupabaseAuthRepository(get()) }
     single<RelationRepository> { SupabaseRelationRepository(get()) }
     single<CheckInRepository> { SupabaseCheckInRepository(get()) }
+    single<NotificationRepository> { SupabaseNotificationRepository(get()) }
     single<LivvingApi> { provideLivvingApi(get()) }
 }

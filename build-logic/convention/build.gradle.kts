@@ -108,5 +108,9 @@ gradlePlugin {
             id = "livving.kakao.android"
             implementationClass = "KakaoAndroidConventionPlugin"
         }
+        register("firebaseMessaging") {
+            id = "livving.firebase.messaging"
+            implementationClass = "FirebaseMessagingConventionPlugin"
+        }
     }
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kr.osj.livving.domain.livving.CheckInStatus
 import kr.osj.livving.domain.livving.InitialUserSettings
+import kr.osj.livving.domain.livving.PushTokenRegistration
 import kr.osj.livving.domain.livving.WatchingUser
 import kr.osj.livving.domain.livving.usecase.AcceptGuardianInviteUseCase
 import kr.osj.livving.domain.livving.usecase.CompleteCheckInUseCase
@@ -13,8 +14,11 @@ import kr.osj.livving.domain.livving.usecase.GetActiveInviteLinksUseCase
 import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
 import kr.osj.livving.domain.livving.usecase.GetGuardianInviteRequestUseCase
 import kr.osj.livving.domain.livving.usecase.GetMyGuardiansUseCase
+import kr.osj.livving.domain.livving.usecase.GetNotificationsUseCase
 import kr.osj.livving.domain.livving.usecase.GetTodayCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.GetWatchingUsersUseCase
+import kr.osj.livving.domain.livving.usecase.MarkNotificationReadUseCase
+import kr.osj.livving.domain.livving.usecase.RegisterPushTokenUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
 import kr.osj.livving.domain.livving.usecase.SavePhoneContactUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
@@ -37,6 +41,9 @@ class MainViewModel(
     private val getTodayCheckInUseCase: GetTodayCheckInUseCase,
     private val saveInitialUserSettingsUseCase: SaveInitialUserSettingsUseCase,
     private val savePhoneContactUseCase: SavePhoneContactUseCase,
+    private val registerPushTokenUseCase: RegisterPushTokenUseCase,
+    private val getNotificationsUseCase: GetNotificationsUseCase,
+    private val markNotificationReadUseCase: MarkNotificationReadUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MainState())
     val state: StateFlow<MainState> = _state.asStateFlow()
@@ -63,6 +70,9 @@ class MainViewModel(
             is MainIntent.ChangePhoneNumber -> update { it.copy(phoneNumberInput = intent.value) }
             MainIntent.TogglePhoneCallEnabled -> update { it.copy(phoneCallEnabled = !it.phoneCallEnabled) }
             MainIntent.SavePhoneContact -> savePhoneContact()
+            is MainIntent.RegisterPushToken -> registerPushToken(intent.token)
+            MainIntent.LoadNotifications -> loadNotifications()
+            is MainIntent.SelectNotification -> selectNotification(intent.notificationId)
             MainIntent.CreateInvite -> createInvite()
             is MainIntent.ChangeManualInviteCode -> update {
                 it.copy(
@@ -196,6 +206,9 @@ class MainViewModel(
             val activeInvites = session?.user?.id
                 ?.let { userId -> runCatching { getActiveInviteLinksUseCase(userId) }.getOrNull() }
                 .orEmpty()
+            val notifications = session?.user?.id
+                ?.let { userId -> runCatching { getNotificationsUseCase(userId) }.getOrNull() }
+                .orEmpty()
             val inviteRequest = _state.value.pendingInviteCode
                 ?.let { inviteCode -> runCatching { getGuardianInviteRequestUseCase(inviteCode) }.getOrNull() }
             update {
@@ -222,6 +235,7 @@ class MainViewModel(
                     guardians = guardians,
                     watchingUsers = watchingUsers,
                     activeInvites = activeInvites,
+                    notifications = notifications,
                     inviteRequest = inviteRequest,
                 )
             }
@@ -241,6 +255,9 @@ class MainViewModel(
                 .orEmpty()
             val activeInvites = session?.user?.id
                 ?.let { userId -> runCatching { getActiveInviteLinksUseCase(userId) }.getOrNull() }
+                .orEmpty()
+            val notifications = session?.user?.id
+                ?.let { userId -> runCatching { getNotificationsUseCase(userId) }.getOrNull() }
                 .orEmpty()
             val inviteRequest = _state.value.pendingInviteCode
                 ?.let { inviteCode -> runCatching { getGuardianInviteRequestUseCase(inviteCode) }.getOrNull() }
@@ -269,6 +286,7 @@ class MainViewModel(
                     guardians = guardians,
                     watchingUsers = watchingUsers,
                     activeInvites = activeInvites,
+                    notifications = notifications,
                     inviteRequest = inviteRequest,
                 )
             }
@@ -325,6 +343,47 @@ class MainViewModel(
                     )
                 }
                 refreshRelations()
+            }
+        }
+    }
+
+    private fun registerPushToken(token: MainPushToken) {
+        viewModelScope.launch {
+            val userId = _state.value.currentUser?.id ?: return@launch
+            runCatching {
+                registerPushTokenUseCase(
+                    userId = userId,
+                    registration = PushTokenRegistration(
+                        token = token.token,
+                        platform = token.platform,
+                        deviceId = token.deviceId,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun loadNotifications() {
+        viewModelScope.launch {
+            val userId = _state.value.currentUser?.id ?: return@launch
+            val notifications = runCatching { getNotificationsUseCase(userId) }.getOrNull().orEmpty()
+            update { it.copy(notifications = notifications) }
+        }
+    }
+
+    private fun selectNotification(notificationId: String) {
+        viewModelScope.launch {
+            val current = _state.value
+            val userId = current.currentUser?.id ?: return@launch
+            val notification = current.notifications.firstOrNull { it.id == notificationId }
+            runCatching { markNotificationReadUseCase(userId, notificationId) }
+            update {
+                it.copy(
+                    selectedWatchingUserId = notification?.relatedUserId ?: it.selectedWatchingUserId,
+                    notifications = it.notifications.map { item ->
+                        if (item.id == notificationId) item.copy(readAt = item.readAt ?: "read") else item
+                    },
+                )
             }
         }
     }

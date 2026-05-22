@@ -14,6 +14,7 @@ import kr.osj.livving.core.ui.LivvingScrollableScreen
 import kr.osj.livving.core.ui.addLivvingMinutes
 import kr.osj.livving.domain.livving.CheckInStatus
 import kr.osj.livving.domain.livving.GuardianStatus
+import kr.osj.livving.domain.livving.LivvingNotificationType
 import kr.osj.livving.feature.auth.AuthTermsState
 import kr.osj.livving.feature.auth.LoginScreen
 import kr.osj.livving.feature.auth.TermsScreen
@@ -76,6 +77,7 @@ fun MainRoute(
     onCallPhone: (String) -> Unit = {},
     onCopyText: (String) -> Unit = {},
     onShareText: (String) -> Unit = {},
+    onFetchPushToken: suspend () -> MainPushToken? = { null },
     viewModel: MainViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -90,6 +92,14 @@ fun MainRoute(
     LaunchedEffect(state.inviteRequest) {
         if (state.inviteRequest != null && backStack.lastOrNull() != MainRoute.Request) {
             backStack.navigateTo(MainRoute.Request)
+        }
+    }
+
+    LaunchedEffect(state.currentUser?.id, state.pushEnabled) {
+        if (state.currentUser != null && state.pushEnabled) {
+            onFetchPushToken()?.let { token ->
+                viewModel.onIntent(MainIntent.RegisterPushToken(token))
+            }
         }
     }
 
@@ -493,9 +503,28 @@ private fun MainEntryContent(
             )
         }
         MainRoute.Notifications -> NotificationsScreen(
-            deadline = state.deadline,
-            alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
-            onAlertClick = { onNavigate(MainRoute.Alert) },
+            notifications = state.notifications.map { notification ->
+                kr.osj.livving.feature.notifications.NotificationUiModel(
+                    id = notification.id,
+                    title = notification.title,
+                    time = formatNotificationTime(notification.createdAt),
+                    desc = notification.body,
+                    tone = when (notification.type) {
+                        LivvingNotificationType.MissedCheckIn -> kr.osj.livving.core.ui.LivvingTone.Red
+                        LivvingNotificationType.GuardianRequest -> kr.osj.livving.core.ui.LivvingTone.Purple
+                        LivvingNotificationType.RelationAccepted -> kr.osj.livving.core.ui.LivvingTone.Green
+                        LivvingNotificationType.Unknown -> kr.osj.livving.core.ui.LivvingTone.Coral
+                    },
+                    read = notification.readAt != null,
+                    opensAlert = notification.type == LivvingNotificationType.MissedCheckIn,
+                )
+            },
+            onNotificationClick = { notification ->
+                onIntent(MainIntent.SelectNotification(notification.id))
+                if (notification.opensAlert) {
+                    onNavigate(MainRoute.Alert)
+                }
+            },
             onRequestClick = { onNavigate(MainRoute.Request) },
         )
         MainRoute.Alert -> AlertScreen(
@@ -654,6 +683,10 @@ private fun formatLastCheckedAt(value: String): String {
     }
 
     return "${month}월 ${day}일 ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+}
+
+private fun formatNotificationTime(value: String): String {
+    return formatLastCheckedAt(value).ifBlank { value.ifBlank { "지금" } }
 }
 
 private fun daysInMonth(year: Int, month: Int): Int = when (month) {

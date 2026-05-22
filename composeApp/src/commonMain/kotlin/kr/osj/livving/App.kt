@@ -5,9 +5,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import kr.osj.livving.core.platform.platformClipboardClient
 import kr.osj.livving.core.platform.platformPhoneCallClient
+import kr.osj.livving.core.platform.platformPushTokenClient
 import kr.osj.livving.core.platform.platformTextShareClient
 import kr.osj.livving.core.ui.LivvingTheme
 import kr.osj.livving.di.appModule
+import kr.osj.livving.feature.main.MainPushToken
 import kr.osj.livving.feature.main.MainRoute
 import org.koin.compose.KoinApplication
 import org.koin.dsl.koinConfiguration
@@ -20,6 +22,7 @@ fun App(initialInviteCode: String? = null) {
     }) {
         val clipboardClient = remember { platformClipboardClient() }
         val phoneCallClient = remember { platformPhoneCallClient() }
+        val pushTokenClient = remember { platformPushTokenClient() }
         val shareClient = remember { platformTextShareClient() }
         LivvingTheme {
             MainRoute(
@@ -27,6 +30,15 @@ fun App(initialInviteCode: String? = null) {
                 onCallPhone = phoneCallClient::call,
                 onCopyText = clipboardClient::copyText,
                 onShareText = shareClient::shareText,
+                onFetchPushToken = {
+                    pushTokenClient.getToken()?.let { token ->
+                        MainPushToken(
+                            token = token.token,
+                            platform = token.platform,
+                            deviceId = token.deviceId,
+                        )
+                    }
+                },
             )
         }
     }
