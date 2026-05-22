@@ -53,6 +53,13 @@ class MainViewModel(
             MainIntent.ToggleAllTerms -> toggleAllTerms()
             is MainIntent.SelectRelationTab -> update { it.copy(relationTab = intent.tab) }
             MainIntent.CreateInvite -> createInvite()
+            is MainIntent.ChangeManualInviteCode -> update {
+                it.copy(
+                    manualInviteCode = intent.value,
+                    manualInviteError = null,
+                )
+            }
+            MainIntent.SubmitManualInviteCode -> openManualInviteCode()
             MainIntent.AcceptInvite -> acceptInvite()
             MainIntent.RejectInvite -> update { it.copy(inviteRequest = null, pendingInviteCode = null) }
             MainIntent.TogglePush -> toggleAndSaveSettings { it.copy(pushEnabled = !it.pushEnabled) }
@@ -257,20 +264,31 @@ class MainViewModel(
 
     fun openInvite(inviteCode: String) {
         viewModelScope.launch {
-            update { it.copy(pendingInviteCode = inviteCode) }
+            val normalizedInviteCode = inviteCode.toInviteCode()
+            if (normalizedInviteCode.isBlank()) {
+                update { it.copy(manualInviteError = "초대코드를 입력해 주세요.") }
+                return@launch
+            }
+            update { it.copy(pendingInviteCode = normalizedInviteCode) }
             val session = _state.value.currentUser
             if (session == null) {
                 update { it.copy(startRoute = MainRoute.Login) }
                 return@launch
             }
-            val request = runCatching { getGuardianInviteRequestUseCase(inviteCode) }.getOrNull()
+            val request = runCatching { getGuardianInviteRequestUseCase(normalizedInviteCode) }.getOrNull()
             update {
                 it.copy(
                     inviteRequest = request,
                     startRoute = if (request != null) MainRoute.Request else it.startRoute,
+                    manualInviteCode = if (request != null) "" else it.manualInviteCode,
+                    manualInviteError = if (request == null) "초대코드를 확인할 수 없어요." else null,
                 )
             }
         }
+    }
+
+    private fun openManualInviteCode() {
+        openInvite(_state.value.manualInviteCode)
     }
 
     private fun acceptInvite() {
@@ -317,4 +335,25 @@ class MainViewModel(
         missedPushEnabled = missedPushEnabled,
     )
 
+}
+
+private fun String.toInviteCode(): String {
+    val labeledCode = Regex("초대\\s*코드[:：]?\\s*([^\\s]+)")
+        .find(this)
+        ?.groupValues
+        ?.getOrNull(1)
+    val token = labeledCode ?: trim()
+        .split(Regex("\\s+"))
+        .firstOrNull { value -> value.contains("join/") || value.startsWith("livving://") }
+        ?: trim()
+    val withoutQuery = token
+        .substringBefore("?")
+        .substringBefore("#")
+        .trim()
+        .trimEnd('/')
+    return when {
+        "livving://join/" in withoutQuery -> withoutQuery.substringAfter("livving://join/")
+        "/join/" in withoutQuery -> withoutQuery.substringAfterLast("/join/")
+        else -> withoutQuery.substringAfterLast("/")
+    }.trim()
 }

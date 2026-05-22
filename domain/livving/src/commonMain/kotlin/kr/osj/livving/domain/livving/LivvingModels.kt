@@ -12,7 +12,7 @@ data class GuardianInvite(
     val id: String,
     val inviteCode: String,
 ) {
-    val inviteLink: String get() = "https://livving.app/join/$inviteCode"
+    val inviteLink: String get() = "livving://join/$inviteCode"
 }
 
 data class GuardianInviteRequest(

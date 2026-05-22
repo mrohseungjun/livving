@@ -2,6 +2,7 @@ package kr.osj.livving.feature.relations
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,11 +32,13 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun InviteScreen(
+    inviteCode: String?,
     inviteLink: String?,
     pendingCount: Int,
     acceptedCount: Int,
     onBackClick: () -> Unit,
     onCreateInviteClick: () -> Unit,
+    onCopyInviteClick: () -> Unit,
     onShareInviteClick: () -> Unit,
     viewModel: InviteViewModel = koinViewModel(),
 ) {
@@ -80,7 +83,25 @@ fun InviteScreen(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text("복사", color = LivvingMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "복사",
+                    modifier = Modifier.clickable(
+                        enabled = inviteLink != null,
+                        onClick = onCopyInviteClick,
+                    ),
+                    color = LivvingMuted,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            if (inviteCode != null) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = "초대코드 $inviteCode",
+                    color = LivvingMuted,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }

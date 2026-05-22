@@ -26,6 +26,8 @@ data class MainState(
     val activeInvites: List<GuardianInvite> = emptyList(),
     val inviteRequest: GuardianInviteRequest? = null,
     val pendingInviteCode: String? = null,
+    val manualInviteCode: String = "",
+    val manualInviteError: String? = null,
     val terms: TermsState = TermsState(),
     val relationTab: RelationsTab = RelationsTab.MyGuardians,
     val pushEnabled: Boolean = true,

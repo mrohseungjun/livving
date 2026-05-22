@@ -13,6 +13,8 @@ sealed interface MainIntent {
     data object ToggleAllTerms : MainIntent
     data class SelectRelationTab(val tab: RelationsTab) : MainIntent
     data object CreateInvite : MainIntent
+    data class ChangeManualInviteCode(val value: String) : MainIntent
+    data object SubmitManualInviteCode : MainIntent
     data object AcceptInvite : MainIntent
     data object RejectInvite : MainIntent
     data object TogglePush : MainIntent

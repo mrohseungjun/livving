@@ -47,6 +47,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -273,6 +275,37 @@ fun LivvingSecondaryButton(
     ) {
         Text(text = text, fontSize = 17.sp, fontWeight = FontWeight.Black)
     }
+}
+
+@Composable
+fun LivvingTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    singleLine: Boolean = true,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        singleLine = singleLine,
+        shape = RoundedCornerShape(18.dp),
+        placeholder = {
+            Text(
+                text = placeholder,
+                color = LivvingMuted,
+                fontSize = 14.sp,
+            )
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = LivvingCoral,
+            unfocusedBorderColor = LivvingLine,
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            cursorColor = LivvingCoral,
+        ),
+    )
 }
 
 @Composable

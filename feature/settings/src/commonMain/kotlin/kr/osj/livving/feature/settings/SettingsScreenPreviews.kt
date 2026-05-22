@@ -1,0 +1,86 @@
+package kr.osj.livving.feature.settings
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import kr.osj.livving.core.ui.LivvingScrollableScreen
+import kr.osj.livving.core.ui.LivvingTheme
+
+@Preview
+@Composable
+private fun SettingsScreenPreview() {
+    LivvingTheme {
+        LivvingScrollableScreen {
+            SettingsScreen(
+                deadline = "08:30",
+                delayMinutes = 5,
+                pushEnabled = true,
+                relationPushEnabled = true,
+                missedPushEnabled = true,
+                onDeadlineClick = {},
+                onDelayClick = {},
+                onScheduleClick = {},
+                onPushToggleClick = {},
+                onRelationPushToggleClick = {},
+                onMissedPushToggleClick = {},
+                onProfileClick = {},
+                onPrivacyClick = {},
+                onLogoutClick = {},
+                viewModel = SettingsViewModel(),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ScheduleScreenPreview() {
+    LivvingTheme {
+        LivvingScrollableScreen {
+            ScheduleScreen(
+                deadline = "08:30",
+                delayMinutes = 5,
+                onBackClick = {},
+                viewModel = ScheduleViewModel(),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ProfileScreenPreview() {
+    LivvingTheme {
+        LivvingScrollableScreen {
+            ProfileScreen(
+                onBackClick = {},
+                viewModel = ProfileViewModel(),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PrivacyScreenPreview() {
+    LivvingTheme {
+        LivvingScrollableScreen {
+            PrivacyScreen(
+                onBackClick = {},
+                viewModel = PrivacyViewModel(),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun HistoryScreenPreview() {
+    LivvingTheme {
+        LivvingScrollableScreen {
+            HistoryScreen(
+                onBackClick = {},
+                viewModel = HistoryViewModel(),
+            )
+        }
+    }
+}

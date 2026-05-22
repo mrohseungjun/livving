@@ -27,6 +27,7 @@ import kr.osj.livving.core.ui.LivvingMuted
 import kr.osj.livving.core.ui.LivvingPrimaryButton
 import kr.osj.livving.core.ui.LivvingSegmented
 import kr.osj.livving.core.ui.LivvingSuccess
+import kr.osj.livving.core.ui.LivvingTextField
 import kr.osj.livving.core.ui.LivvingTone
 import kr.osj.livving.core.ui.LivvingWarning
 import org.koin.compose.viewmodel.koinViewModel
@@ -38,10 +39,14 @@ fun RelationsScreen(
     watchingUsers: List<WatchingUserUiModel>,
     deadline: String,
     alertAt: String,
+    manualInviteCode: String,
+    manualInviteError: String?,
     onMyGuardiansClick: () -> Unit,
     onWatchingClick: () -> Unit,
     onGuardianClick: (RelationGuardianUiModel) -> Unit,
     onInviteClick: () -> Unit,
+    onManualInviteCodeChange: (String) -> Unit,
+    onManualInviteSubmit: () -> Unit,
     onWatchingUserClick: (WatchingUserUiModel) -> Unit,
     viewModel: RelationsViewModel = koinViewModel(),
 ) {
@@ -76,6 +81,13 @@ fun RelationsScreen(
             text = "보호자 그룹 링크를 한 번 공유하고, 각 보호자가 앱에서 수락하면 연결됩니다.",
             tone = LivvingTone.Neutral,
         )
+        Spacer(Modifier.height(14.dp))
+        ManualInviteCodeCard(
+            value = manualInviteCode,
+            error = manualInviteError,
+            onValueChange = onManualInviteCodeChange,
+            onSubmit = onManualInviteSubmit,
+        )
     } else {
         watchingUsers.forEach { user ->
             WatchingRow(
@@ -85,6 +97,38 @@ fun RelationsScreen(
                 onClick = { onWatchingUserClick(user) },
             )
             Spacer(Modifier.height(14.dp))
+        }
+    }
+}
+
+@Composable
+private fun ManualInviteCodeCard(
+    value: String,
+    error: String?,
+    onValueChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+) {
+    LivvingCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp)) {
+            Text("초대코드 직접 입력", fontSize = 17.sp, fontWeight = FontWeight.Black)
+            Spacer(Modifier.height(6.dp))
+            Text("링크가 열리지 않으면 초대코드나 링크 전체를 붙여넣으세요.", color = LivvingMuted, fontSize = 13.sp)
+            Spacer(Modifier.height(14.dp))
+            LivvingTextField(
+                value = value,
+                onValueChange = onValueChange,
+                placeholder = "예: livving://join/AB12CD 또는 AB12CD",
+            )
+            if (error != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(error, color = LivvingDanger, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(12.dp))
+            LivvingPrimaryButton(
+                text = "초대 요청 확인하기",
+                enabled = value.isNotBlank(),
+                onClick = onSubmit,
+            )
         }
     }
 }
