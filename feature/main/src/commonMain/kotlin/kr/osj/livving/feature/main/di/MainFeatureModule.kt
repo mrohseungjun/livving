@@ -31,10 +31,12 @@ val mainFeatureModule = module {
             getActiveInviteLinksUseCase = get(),
             getGuardianInviteRequestUseCase = get(),
             acceptGuardianInviteUseCase = get(),
+            disconnectGuardianUseCase = get(),
             getWatchingUsersUseCase = get(),
             getCurrentAuthSessionUseCase = get(),
             getTodayCheckInUseCase = get(),
             saveInitialUserSettingsUseCase = get(),
+            savePhoneContactUseCase = get(),
         )
     }
 }

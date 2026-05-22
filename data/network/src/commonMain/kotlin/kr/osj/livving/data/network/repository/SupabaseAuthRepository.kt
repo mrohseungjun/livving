@@ -7,6 +7,7 @@ import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import kr.osj.livving.data.network.dto.ProfileDto
+import kr.osj.livving.data.network.dto.UserContactSettingDto
 import kr.osj.livving.data.network.dto.UserSettingsDto
 import kr.osj.livving.domain.livving.AuthSession
 import kr.osj.livving.domain.livving.InitialUserSettings
@@ -37,9 +38,10 @@ class SupabaseAuthRepository(
                 }
             }
             .decodeList<UserSettingsDto>()
+        val contact = getContactSetting(user.id)
 
         return AuthSession(
-            user = profile.toDomain(),
+            user = profile.toDomain(contact),
             hasCompletedInitialSetup = settings.isNotEmpty(),
             settings = settings.firstOrNull()?.toDomain(),
         )
@@ -100,15 +102,51 @@ class SupabaseAuthRepository(
             )
     }
 
+    override suspend fun savePhoneContact(userId: String, phoneNumber: String?, phoneCallEnabled: Boolean): LivvingUser {
+        val normalizedPhoneNumber = phoneNumber?.trim().orEmpty().ifBlank { null }
+        val contact = client.from("user_contact_settings")
+            .upsert(
+                UserContactSettingDto(
+                    userId = userId,
+                    phoneNumber = normalizedPhoneNumber,
+                    phoneCallEnabled = phoneCallEnabled && normalizedPhoneNumber != null,
+                ),
+            ) {
+                select()
+            }
+            .decodeSingle<UserContactSettingDto>()
+        val profile = client.from("profiles")
+            .select {
+                filter {
+                    filter("id", FilterOperator.EQ, userId)
+                }
+            }
+            .decodeSingle<ProfileDto>()
+        return profile.toDomain(contact)
+    }
+
     override suspend fun logout() {
         client.auth.signOut()
     }
 
-    private fun ProfileDto.toDomain(): LivvingUser = LivvingUser(
+    private suspend fun getContactSetting(userId: String): UserContactSettingDto? {
+        return client.from("user_contact_settings")
+            .select {
+                filter {
+                    filter("user_id", FilterOperator.EQ, userId)
+                }
+            }
+            .decodeList<UserContactSettingDto>()
+            .firstOrNull()
+    }
+
+    private fun ProfileDto.toDomain(contact: UserContactSettingDto? = null): LivvingUser = LivvingUser(
         id = id,
         kakaoId = kakaoId,
         nickname = nickname,
         profileImageUrl = profileImageUrl,
+        phoneNumber = contact?.phoneNumber,
+        phoneCallEnabled = contact?.phoneCallEnabled == true,
     )
 
     private fun UserSettingsDto.toDomain(): InitialUserSettings = InitialUserSettings(

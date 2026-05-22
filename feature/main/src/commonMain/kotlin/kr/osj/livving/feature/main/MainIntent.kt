@@ -12,7 +12,13 @@ sealed interface MainIntent {
     data class ToggleTerms(val item: TermsItem) : MainIntent
     data object ToggleAllTerms : MainIntent
     data class SelectRelationTab(val tab: RelationsTab) : MainIntent
+    data class SelectGuardian(val guardianId: Long) : MainIntent
+    data class SelectWatchingUser(val userId: String) : MainIntent
     data object RefreshRelations : MainIntent
+    data object DisconnectSelectedGuardian : MainIntent
+    data class ChangePhoneNumber(val value: String) : MainIntent
+    data object TogglePhoneCallEnabled : MainIntent
+    data object SavePhoneContact : MainIntent
     data object CreateInvite : MainIntent
     data class ChangeManualInviteCode(val value: String) : MainIntent
     data object SubmitManualInviteCode : MainIntent

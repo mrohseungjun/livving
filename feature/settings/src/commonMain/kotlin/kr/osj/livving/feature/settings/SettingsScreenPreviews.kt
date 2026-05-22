@@ -52,7 +52,15 @@ private fun ProfileScreenPreview() {
     LivvingTheme {
         LivvingScrollableScreen {
             ProfileScreen(
+                userName = "오승준",
+                guardianCount = 2,
+                watchingCount = 3,
+                phoneNumber = "01012345678",
+                phoneCallEnabled = true,
                 onBackClick = {},
+                onPhoneNumberChange = {},
+                onPhoneCallEnabledToggle = {},
+                onPhoneSaveClick = {},
                 viewModel = ProfileViewModel(),
             )
         }

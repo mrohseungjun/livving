@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import kr.osj.livving.core.platform.platformClipboardClient
+import kr.osj.livving.core.platform.platformPhoneCallClient
 import kr.osj.livving.core.platform.platformTextShareClient
 import kr.osj.livving.core.ui.LivvingTheme
 import kr.osj.livving.di.appModule
@@ -18,10 +19,12 @@ fun App(initialInviteCode: String? = null) {
         modules(appModule)
     }) {
         val clipboardClient = remember { platformClipboardClient() }
+        val phoneCallClient = remember { platformPhoneCallClient() }
         val shareClient = remember { platformTextShareClient() }
         LivvingTheme {
             MainRoute(
                 initialInviteCode = initialInviteCode,
+                onCallPhone = phoneCallClient::call,
                 onCopyText = clipboardClient::copyText,
                 onShareText = shareClient::shareText,
             )

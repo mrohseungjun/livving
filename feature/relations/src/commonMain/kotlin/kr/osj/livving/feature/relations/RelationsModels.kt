@@ -15,6 +15,7 @@ data class RelationGuardianUiModel(
     val name: String,
     val relation: String,
     val status: RelationGuardianStatus,
+    val phoneNumber: String? = null,
 )
 
 enum class WatchingState {
@@ -25,8 +26,10 @@ enum class WatchingState {
 
 data class WatchingUserUiModel(
     val id: Long,
+    val userId: String,
     val name: String,
     val state: WatchingState,
     val text: String,
     val sub: String,
+    val phoneNumber: String? = null,
 )

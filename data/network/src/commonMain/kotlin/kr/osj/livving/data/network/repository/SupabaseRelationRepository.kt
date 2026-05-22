@@ -8,6 +8,7 @@ import kr.osj.livving.data.network.dto.GuardianRelationDto
 import kr.osj.livving.data.network.dto.InviteLinkDto
 import kr.osj.livving.data.network.dto.InviteRequestDto
 import kr.osj.livving.data.network.dto.ProfileDto
+import kr.osj.livving.data.network.dto.UserContactSettingDto
 import kr.osj.livving.domain.livving.Guardian
 import kr.osj.livving.domain.livving.GuardianInvite
 import kr.osj.livving.domain.livving.GuardianInviteRequest
@@ -26,7 +27,7 @@ class SupabaseRelationRepository(
                 }
             }
             .decodeList<GuardianRelationDto>()
-            .map { dto -> dto.toDomain() }
+            .map { dto -> dto.toDomain(phoneNumber = dto.guardianUserId?.let { getCallablePhoneNumber(it) }) }
     }
 
     override suspend fun getWatchingUsers(guardianUserId: String): List<WatchingUser> {
@@ -53,6 +54,7 @@ class SupabaseRelationRepository(
                 WatchingUser(
                     id = it.id,
                     name = it.nickname,
+                    phoneNumber = getCallablePhoneNumber(it.id),
                 )
             }
         }
@@ -156,12 +158,36 @@ class SupabaseRelationRepository(
         return relation.toDomain()
     }
 
-    private fun GuardianRelationDto.toDomain(): Guardian = Guardian(
+    override suspend fun disconnectGuardian(userId: String, guardianRelationId: Long) {
+        client.from("guardian_relations")
+            .delete {
+                filter {
+                    filter("id", FilterOperator.EQ, guardianRelationId)
+                    filter("user_id", FilterOperator.EQ, userId)
+                }
+            }
+    }
+
+    private suspend fun getCallablePhoneNumber(userId: String): String? {
+        val contact = client.from("user_contact_settings")
+            .select {
+                filter {
+                    filter("user_id", FilterOperator.EQ, userId)
+                    filter("phone_call_enabled", FilterOperator.EQ, true)
+                }
+            }
+            .decodeList<UserContactSettingDto>()
+            .firstOrNull()
+        return contact?.phoneNumber?.trim()?.ifBlank { null }
+    }
+
+    private fun GuardianRelationDto.toDomain(phoneNumber: String? = null): Guardian = Guardian(
         id = id,
         name = guardianName,
         relation = relation,
         status = if (status == "pending") GuardianStatus.Pending else GuardianStatus.Accepted,
         inviteCode = inviteCode,
+        phoneNumber = phoneNumber,
     )
 
     private fun InviteLinkDto.toDomain(): GuardianInvite = GuardianInvite(

@@ -48,6 +48,7 @@ fun RelationsScreen(
     onManualInviteCodeChange: (String) -> Unit,
     onManualInviteSubmit: () -> Unit,
     onWatchingUserClick: (WatchingUserUiModel) -> Unit,
+    onWatchingCallClick: (WatchingUserUiModel) -> Unit,
     viewModel: RelationsViewModel = koinViewModel(),
 ) {
     LivvingHeader(
@@ -95,6 +96,7 @@ fun RelationsScreen(
                 deadline = deadline,
                 alertAt = alertAt,
                 onClick = { onWatchingUserClick(user) },
+                onCallClick = { onWatchingCallClick(user) },
             )
             Spacer(Modifier.height(14.dp))
         }
@@ -168,6 +170,7 @@ private fun WatchingRow(
     deadline: String,
     alertAt: String,
     onClick: () -> Unit,
+    onCallClick: () -> Unit,
 ) {
     val tone = when (user.state) {
         WatchingState.Safe -> LivvingTone.Green
@@ -195,7 +198,15 @@ private fun WatchingRow(
                 Text(user.text, color = color, fontWeight = FontWeight.Bold)
                 Text("마감 $deadline · 알림 $alertAt", color = Color(0xFFA3A3A3), fontSize = 12.sp)
             }
-            Text("전화", color = LivvingCoral, fontWeight = FontWeight.Bold)
+            Text(
+                text = if (user.phoneNumber != null) "전화" else "번호 없음",
+                modifier = Modifier.clickable(
+                    enabled = user.phoneNumber != null,
+                    onClick = onCallClick,
+                ),
+                color = if (user.phoneNumber != null) LivvingCoral else LivvingMuted,
+                fontWeight = FontWeight.Bold,
+            )
         }
     }
 }

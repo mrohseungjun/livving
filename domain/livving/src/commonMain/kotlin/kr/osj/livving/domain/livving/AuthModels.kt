@@ -5,6 +5,8 @@ data class LivvingUser(
     val kakaoId: String,
     val nickname: String,
     val profileImageUrl: String?,
+    val phoneNumber: String? = null,
+    val phoneCallEnabled: Boolean = false,
 )
 
 data class KakaoLoginToken(

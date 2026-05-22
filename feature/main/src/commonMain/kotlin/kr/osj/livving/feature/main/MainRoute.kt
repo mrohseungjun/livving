@@ -73,6 +73,7 @@ private val mainNavigationStateConfiguration = SavedStateConfiguration {
 @Composable
 fun MainRoute(
     initialInviteCode: String? = null,
+    onCallPhone: (String) -> Unit = {},
     onCopyText: (String) -> Unit = {},
     onShareText: (String) -> Unit = {},
     viewModel: MainViewModel = koinViewModel(),
@@ -101,6 +102,7 @@ fun MainRoute(
         onBack = { backStack.popOrReplace(MainRoute.Home) },
         onLoginSuccess = { onReady -> viewModel.refreshSessionAfterLogin(onReady) },
         onSaveInitialSettings = { onSaved -> viewModel.saveInitialSettings(onSaved) },
+        onCallPhone = onCallPhone,
         onCopyText = onCopyText,
         onShareText = onShareText,
     )
@@ -116,6 +118,7 @@ fun MainScreen(
     onBack: () -> Unit,
     onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
     onSaveInitialSettings: (() -> Unit) -> Unit,
+    onCallPhone: (String) -> Unit,
     onCopyText: (String) -> Unit,
     onShareText: (String) -> Unit,
 ) {
@@ -128,6 +131,7 @@ fun MainScreen(
         onBack = onBack,
         onLoginSuccess = onLoginSuccess,
         onSaveInitialSettings = onSaveInitialSettings,
+        onCallPhone = onCallPhone,
         onCopyText = onCopyText,
         onShareText = onShareText,
     )
@@ -143,6 +147,7 @@ private fun MainNavDisplay(
     onBack: () -> Unit,
     onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
     onSaveInitialSettings: (() -> Unit) -> Unit,
+    onCallPhone: (String) -> Unit,
     onCopyText: (String) -> Unit,
     onShareText: (String) -> Unit,
 ) {
@@ -151,64 +156,64 @@ private fun MainNavDisplay(
         onBack = onBack,
         entryProvider = entryProvider {
             entry<MainRoute.Splash> {
-                MainEntry(MainRoute.Splash, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Splash, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Login> {
-                MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Terms> {
-                MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.SetupDeadline> {
-                MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.SetupDelay> {
-                MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Home> {
-                MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.History> {
-                MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Relations> {
-                MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Invite> {
-                MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.InviteStatus> {
-                MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.GuardianDetail> {
-                MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Notifications> {
-                MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Alert> {
-                MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Request> {
-                MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Settings> {
-                MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Schedule> {
-                MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Profile> {
-                MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.Privacy> {
-                MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.DeadlineChange> {
-                MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
             entry<MainRoute.DelaySetting> {
-                MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCopyText, onShareText)
+                MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
             }
         },
     )
@@ -224,6 +229,7 @@ private fun MainEntry(
     onBack: () -> Unit,
     onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
     onSaveInitialSettings: (() -> Unit) -> Unit,
+    onCallPhone: (String) -> Unit,
     onCopyText: (String) -> Unit,
     onShareText: (String) -> Unit,
 ) {
@@ -247,6 +253,7 @@ private fun MainEntry(
                 onBack = onBack,
                 onLoginSuccess = onLoginSuccess,
                 onSaveInitialSettings = onSaveInitialSettings,
+                onCallPhone = onCallPhone,
                 onCopyText = onCopyText,
                 onShareText = onShareText,
             )
@@ -300,6 +307,7 @@ private fun MainEntryContent(
     onBack: () -> Unit,
     onLoginSuccess: ((MainRoute) -> Unit) -> Unit,
     onSaveInitialSettings: (() -> Unit) -> Unit,
+    onCallPhone: (String) -> Unit,
     onCopyText: (String) -> Unit,
     onShareText: (String) -> Unit,
 ) {
@@ -380,6 +388,7 @@ private fun MainEntryContent(
                         } else {
                             RelationGuardianStatus.Accepted
                         },
+                        phoneNumber = guardian.phoneNumber,
                     )
                 },
                 watchingUsers = state.watchingUsers.map { user ->
@@ -390,6 +399,7 @@ private fun MainEntryContent(
                     }
                     WatchingUserUiModel(
                         id = user.id.hashCode().toLong(),
+                        userId = user.id,
                         name = user.name,
                         state = status,
                         text = when (status) {
@@ -402,6 +412,7 @@ private fun MainEntryContent(
                             WatchingState.Waiting -> "마감 대기 중"
                             WatchingState.Missed -> "보호자 알림 대상"
                         },
+                        phoneNumber = user.phoneNumber,
                     )
                 },
                 deadline = state.deadline,
@@ -411,6 +422,7 @@ private fun MainEntryContent(
                 onMyGuardiansClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.MyGuardians)) },
                 onWatchingClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.Watching)) },
                 onGuardianClick = { guardian ->
+                    onIntent(MainIntent.SelectGuardian(guardian.id))
                     onNavigate(
                         if (guardian.status == RelationGuardianStatus.Pending) {
                             MainRoute.InviteStatus
@@ -423,11 +435,15 @@ private fun MainEntryContent(
                 onManualInviteCodeChange = { onIntent(MainIntent.ChangeManualInviteCode(it)) },
                 onManualInviteSubmit = { onIntent(MainIntent.SubmitManualInviteCode) },
                 onWatchingUserClick = { user ->
+                    onIntent(MainIntent.SelectWatchingUser(user.userId))
                     if (user.state == WatchingState.Missed) {
                         onNavigate(MainRoute.Alert)
                     } else {
                         onReplace(MainRoute.Home)
                     }
+                },
+                onWatchingCallClick = { user ->
+                    user.phoneNumber?.let(onCallPhone)
                 },
             )
         }
@@ -456,11 +472,26 @@ private fun MainEntryContent(
             },
         )
         MainRoute.InviteStatus -> InviteStatusScreen(onBackClick = onBack)
-        MainRoute.GuardianDetail -> GuardianDetailScreen(
-            deadline = state.deadline,
-            delayMinutes = state.delayMinutes,
-            onBackClick = onBack,
-        )
+        MainRoute.GuardianDetail -> {
+            val guardian = state.guardians.firstOrNull { it.id == state.selectedGuardianId }
+                ?: state.guardians.firstOrNull { it.status == GuardianStatus.Accepted }
+            GuardianDetailScreen(
+                name = guardian?.name ?: "보호자",
+                relation = guardian?.relation ?: "보호자",
+                connected = guardian?.status != GuardianStatus.Pending,
+                phoneNumber = guardian?.phoneNumber,
+                deadline = state.deadline,
+                delayMinutes = state.delayMinutes,
+                onBackClick = onBack,
+                onCallClick = {
+                    guardian?.phoneNumber?.let(onCallPhone)
+                },
+                onDisconnectClick = {
+                    onIntent(MainIntent.DisconnectSelectedGuardian)
+                    onBack()
+                },
+            )
+        }
         MainRoute.Notifications -> NotificationsScreen(
             deadline = state.deadline,
             alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
@@ -468,9 +499,15 @@ private fun MainEntryContent(
             onRequestClick = { onNavigate(MainRoute.Request) },
         )
         MainRoute.Alert -> AlertScreen(
+            userName = state.selectedWatchingUser()?.name ?: "보호 대상자",
+            lastCheckedAt = formatLastCheckedAt(state.selectedWatchingUser()?.lastCheckedAt.orEmpty()).ifBlank { "확인 기록 없음" },
+            phoneNumber = state.selectedWatchingUser()?.phoneNumber,
             deadline = state.deadline,
             alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
             onBackClick = onBack,
+            onCallClick = {
+                state.selectedWatchingUser()?.phoneNumber?.let(onCallPhone)
+            },
             onConfirmClick = { onReplace(MainRoute.Notifications) },
         )
         MainRoute.Request -> RequestScreen(
@@ -509,7 +546,17 @@ private fun MainEntryContent(
             delayMinutes = state.delayMinutes,
             onBackClick = onBack,
         )
-        MainRoute.Profile -> ProfileScreen(onBackClick = onBack)
+        MainRoute.Profile -> ProfileScreen(
+            userName = state.currentUser?.nickname ?: "사용자",
+            guardianCount = state.guardians.count { it.status == GuardianStatus.Accepted },
+            watchingCount = state.watchingUsers.size,
+            phoneNumber = state.phoneNumberInput,
+            phoneCallEnabled = state.phoneCallEnabled,
+            onBackClick = onBack,
+            onPhoneNumberChange = { onIntent(MainIntent.ChangePhoneNumber(it)) },
+            onPhoneCallEnabledToggle = { onIntent(MainIntent.TogglePhoneCallEnabled) },
+            onPhoneSaveClick = { onIntent(MainIntent.SavePhoneContact) },
+        )
         MainRoute.Privacy -> PrivacyScreen(onBackClick = onBack)
         MainRoute.DeadlineChange -> DeadlineScreen(
             selectedDeadline = state.selectedDeadline,
@@ -578,6 +625,10 @@ private fun MainRoute.activeTab(): String = when (this) {
     MainRoute.DelaySetting -> "settings"
     else -> "home"
 }
+
+private fun MainState.selectedWatchingUser() = watchingUsers.firstOrNull { it.id == selectedWatchingUserId }
+    ?: watchingUsers.firstOrNull { it.status == CheckInStatus.Late }
+    ?: watchingUsers.firstOrNull()
 
 private fun formatLastCheckedAt(value: String): String {
     if (value.isBlank()) return ""

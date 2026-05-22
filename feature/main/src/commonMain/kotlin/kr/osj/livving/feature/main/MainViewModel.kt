@@ -8,6 +8,7 @@ import kr.osj.livving.domain.livving.WatchingUser
 import kr.osj.livving.domain.livving.usecase.AcceptGuardianInviteUseCase
 import kr.osj.livving.domain.livving.usecase.CompleteCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.CreateGuardianInviteUseCase
+import kr.osj.livving.domain.livving.usecase.DisconnectGuardianUseCase
 import kr.osj.livving.domain.livving.usecase.GetActiveInviteLinksUseCase
 import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
 import kr.osj.livving.domain.livving.usecase.GetGuardianInviteRequestUseCase
@@ -15,6 +16,7 @@ import kr.osj.livving.domain.livving.usecase.GetMyGuardiansUseCase
 import kr.osj.livving.domain.livving.usecase.GetTodayCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.GetWatchingUsersUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
+import kr.osj.livving.domain.livving.usecase.SavePhoneContactUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,10 +31,12 @@ class MainViewModel(
     private val getActiveInviteLinksUseCase: GetActiveInviteLinksUseCase,
     private val getGuardianInviteRequestUseCase: GetGuardianInviteRequestUseCase,
     private val acceptGuardianInviteUseCase: AcceptGuardianInviteUseCase,
+    private val disconnectGuardianUseCase: DisconnectGuardianUseCase,
     private val getWatchingUsersUseCase: GetWatchingUsersUseCase,
     private val getCurrentAuthSessionUseCase: GetCurrentAuthSessionUseCase,
     private val getTodayCheckInUseCase: GetTodayCheckInUseCase,
     private val saveInitialUserSettingsUseCase: SaveInitialUserSettingsUseCase,
+    private val savePhoneContactUseCase: SavePhoneContactUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MainState())
     val state: StateFlow<MainState> = _state.asStateFlow()
@@ -52,7 +56,13 @@ class MainViewModel(
             is MainIntent.ToggleTerms -> toggleTerms(intent.item)
             MainIntent.ToggleAllTerms -> toggleAllTerms()
             is MainIntent.SelectRelationTab -> update { it.copy(relationTab = intent.tab) }
+            is MainIntent.SelectGuardian -> update { it.copy(selectedGuardianId = intent.guardianId) }
+            is MainIntent.SelectWatchingUser -> update { it.copy(selectedWatchingUserId = intent.userId) }
             MainIntent.RefreshRelations -> refreshRelations()
+            MainIntent.DisconnectSelectedGuardian -> disconnectSelectedGuardian()
+            is MainIntent.ChangePhoneNumber -> update { it.copy(phoneNumberInput = intent.value) }
+            MainIntent.TogglePhoneCallEnabled -> update { it.copy(phoneCallEnabled = !it.phoneCallEnabled) }
+            MainIntent.SavePhoneContact -> savePhoneContact()
             MainIntent.CreateInvite -> createInvite()
             is MainIntent.ChangeManualInviteCode -> update {
                 it.copy(
@@ -154,6 +164,24 @@ class MainViewModel(
         }
     }
 
+    private fun disconnectSelectedGuardian() {
+        viewModelScope.launch {
+            val current = _state.value
+            val userId = current.currentUser?.id ?: return@launch
+            val guardianRelationId = current.selectedGuardianId ?: return@launch
+            runCatching { disconnectGuardianUseCase(userId, guardianRelationId) }
+                .onSuccess {
+                    val guardians = runCatching { getMyGuardiansUseCase(userId) }.getOrNull().orEmpty()
+                    update {
+                        it.copy(
+                            guardians = guardians,
+                            selectedGuardianId = null,
+                        )
+                    }
+                }
+        }
+    }
+
     private fun loadSession() {
         viewModelScope.launch {
             val session = getCurrentAuthSessionUseCase()
@@ -174,6 +202,8 @@ class MainViewModel(
                 it.copy(
                     sessionChecked = true,
                     currentUser = session?.user,
+                    phoneNumberInput = session?.user?.phoneNumber.orEmpty(),
+                    phoneCallEnabled = session?.user?.phoneCallEnabled == true,
                     startRoute = when {
                         session == null -> MainRoute.Login
                         inviteRequest != null -> MainRoute.Request
@@ -224,6 +254,8 @@ class MainViewModel(
                 it.copy(
                     sessionChecked = true,
                     currentUser = session?.user,
+                    phoneNumberInput = session?.user?.phoneNumber.orEmpty(),
+                    phoneCallEnabled = session?.user?.phoneCallEnabled == true,
                     startRoute = route,
                     checked = todayCheckIn != null,
                     lastCheckedAt = todayCheckIn?.lastCheckedAt.orEmpty(),
@@ -271,6 +303,29 @@ class MainViewModel(
                 userId = userId,
                 settings = current.toInitialUserSettings(),
             )
+        }
+    }
+
+    private fun savePhoneContact() {
+        viewModelScope.launch {
+            val current = _state.value
+            val userId = current.currentUser?.id ?: return@launch
+            runCatching {
+                savePhoneContactUseCase(
+                    userId = userId,
+                    phoneNumber = current.phoneNumberInput,
+                    phoneCallEnabled = current.phoneCallEnabled,
+                )
+            }.onSuccess { user ->
+                update {
+                    it.copy(
+                        currentUser = user,
+                        phoneNumberInput = user.phoneNumber.orEmpty(),
+                        phoneCallEnabled = user.phoneCallEnabled,
+                    )
+                }
+                refreshRelations()
+            }
         }
     }
 

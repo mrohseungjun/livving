@@ -43,5 +43,7 @@ class CreateGuardianInviteUseCaseTest {
                 status = GuardianStatus.Accepted,
             )
         }
+
+        override suspend fun disconnectGuardian(userId: String, guardianRelationId: Long) = Unit
     }
 }

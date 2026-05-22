@@ -79,5 +79,9 @@ private object PreviewAuthRepository : AuthRepository {
     }
 
     override suspend fun saveInitialSettings(userId: String, settings: InitialUserSettings) = Unit
+    override suspend fun savePhoneContact(userId: String, phoneNumber: String?, phoneCallEnabled: Boolean): LivvingUser = user.copy(
+        phoneNumber = phoneNumber,
+        phoneCallEnabled = phoneCallEnabled,
+    )
     override suspend fun logout() = Unit
 }

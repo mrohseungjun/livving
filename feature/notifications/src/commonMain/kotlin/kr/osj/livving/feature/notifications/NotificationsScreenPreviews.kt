@@ -27,9 +27,13 @@ private fun AlertScreenPreview() {
     LivvingTheme {
         LivvingScrollableScreen {
             AlertScreen(
+                userName = "오승준",
+                lastCheckedAt = "5월 22일 08:10",
+                phoneNumber = "01012345678",
                 deadline = "08:30",
                 alertAt = "08:35",
                 onBackClick = {},
+                onCallClick = {},
                 onConfirmClick = {},
                 viewModel = AlertViewModel(),
             )

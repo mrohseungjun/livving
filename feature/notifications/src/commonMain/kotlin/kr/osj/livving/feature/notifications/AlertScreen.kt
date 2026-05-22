@@ -24,9 +24,13 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AlertScreen(
+    userName: String,
+    lastCheckedAt: String,
+    phoneNumber: String?,
     deadline: String,
     alertAt: String,
     onBackClick: () -> Unit,
+    onCallClick: () -> Unit,
     onConfirmClick: () -> Unit,
     viewModel: AlertViewModel = koinViewModel(),
 ) {
@@ -38,22 +42,26 @@ fun AlertScreen(
     LivvingCard {
         Column(Modifier.padding(20.dp)) {
             Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp)) {
-                LivvingAvatar("오승준")
+                LivvingAvatar(userName)
                 Column {
-                    Text("오승준", fontSize = 24.sp, fontWeight = FontWeight.Black)
+                    Text(userName, fontSize = 24.sp, fontWeight = FontWeight.Black)
                     LivvingBadge("미확인", LivvingTone.Red)
                 }
             }
             Spacer(Modifier.height(24.dp))
             LivvingInfoBox("설정된 시간까지 안부 확인이 없어요. 가볍게 연락해 확인해 주세요.", tone = LivvingTone.Red)
             Spacer(Modifier.height(16.dp))
-            LivvingDataRow("마지막 확인", "어제 08:10")
+            LivvingDataRow("마지막 확인", lastCheckedAt)
             LivvingDataRow("안부 마감", deadline)
             LivvingDataRow("보호자 알림", alertAt)
         }
     }
     Spacer(Modifier.height(24.dp))
-    LivvingPrimaryButton("전화하기") {}
+    LivvingPrimaryButton(
+        text = if (phoneNumber != null) "전화하기" else "전화번호 없음",
+        enabled = phoneNumber != null,
+        onClick = onCallClick,
+    )
     Spacer(Modifier.height(12.dp))
     LivvingSecondaryButton("확인했어요", onClick = onConfirmClick)
 }

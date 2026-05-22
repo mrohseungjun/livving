@@ -258,6 +258,7 @@ fun LivvingPrimaryButton(
 fun LivvingSecondaryButton(
     text: String,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     danger: Boolean = false,
     onClick: () -> Unit,
 ) {
@@ -265,6 +266,7 @@ fun LivvingSecondaryButton(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
+        enabled = enabled,
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
         border = BorderStroke(1.dp, if (danger) Color(0xFFFEE2E2) else Color(0xFFE5E5E5)),

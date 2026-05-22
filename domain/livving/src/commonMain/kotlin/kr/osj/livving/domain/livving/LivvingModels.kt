@@ -6,6 +6,7 @@ data class Guardian(
     val relation: String,
     val status: GuardianStatus,
     val inviteCode: String? = null,
+    val phoneNumber: String? = null,
 )
 
 data class GuardianInvite(
@@ -26,6 +27,7 @@ data class WatchingUser(
     val name: String,
     val status: CheckInStatus = CheckInStatus.Before,
     val lastCheckedAt: String = "",
+    val phoneNumber: String? = null,
 )
 
 data class CheckInCompletion(

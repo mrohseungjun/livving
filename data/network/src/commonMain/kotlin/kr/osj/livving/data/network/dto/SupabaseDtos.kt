@@ -12,6 +12,13 @@ data class ProfileDto(
 )
 
 @Serializable
+data class UserContactSettingDto(
+    @SerialName("user_id") val userId: String,
+    @SerialName("phone_number") val phoneNumber: String? = null,
+    @SerialName("phone_call_enabled") val phoneCallEnabled: Boolean = false,
+)
+
+@Serializable
 data class GuardianRelationDto(
     val id: Long,
     @SerialName("user_id") val userId: String,
