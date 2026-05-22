@@ -14,8 +14,39 @@ data class ProfileDto(
 @Serializable
 data class GuardianRelationDto(
     val id: Long,
+    @SerialName("user_id") val userId: String,
+    @SerialName("guardian_user_id") val guardianUserId: String? = null,
     @SerialName("guardian_name") val guardianName: String,
     val relation: String,
+    val status: String,
+    @SerialName("invite_code") val inviteCode: String,
+    @SerialName("invite_link_id") val inviteLinkId: String? = null,
+)
+
+@Serializable
+data class GuardianRelationCreateDto(
+    @SerialName("user_id") val userId: String,
+    @SerialName("guardian_user_id") val guardianUserId: String,
+    @SerialName("guardian_name") val guardianName: String,
+    val relation: String,
+    val status: String,
+    @SerialName("invite_code") val inviteCode: String,
+    @SerialName("invite_link_id") val inviteLinkId: String,
+)
+
+@Serializable
+data class InviteLinkDto(
+    val id: String,
+    @SerialName("owner_user_id") val ownerUserId: String,
+    @SerialName("invite_code") val inviteCode: String,
+    val status: String,
+)
+
+@Serializable
+data class InviteRequestDto(
+    val id: String,
+    @SerialName("owner_user_id") val ownerUserId: String,
+    @SerialName("invite_code") val inviteCode: String,
     val status: String,
 )
 

@@ -3,6 +3,8 @@ package kr.osj.livving.feature.main
 import androidx.navigation3.runtime.NavKey
 import kr.osj.livving.domain.livving.CheckInStatus
 import kr.osj.livving.domain.livving.Guardian
+import kr.osj.livving.domain.livving.GuardianInvite
+import kr.osj.livving.domain.livving.GuardianInviteRequest
 import kr.osj.livving.domain.livving.GuardianStatus
 import kr.osj.livving.domain.livving.LivvingUser
 import kr.osj.livving.feature.relations.RelationsTab
@@ -18,7 +20,10 @@ data class MainState(
     val checked: Boolean = false,
     val lastCheckedAt: String = "",
     val status: CheckInStatus = CheckInStatus.Before,
-    val guardians: List<Guardian> = seedGuardians,
+    val guardians: List<Guardian> = emptyList(),
+    val activeInvites: List<GuardianInvite> = emptyList(),
+    val inviteRequest: GuardianInviteRequest? = null,
+    val pendingInviteCode: String? = null,
     val terms: TermsState = TermsState(),
     val relationTab: RelationsTab = RelationsTab.MyGuardians,
     val pushEnabled: Boolean = true,
@@ -86,9 +91,3 @@ enum class TermsItem {
     Age,
     Marketing,
 }
-
-val seedGuardians = listOf(
-    Guardian(1, "김지연", "딸", GuardianStatus.Accepted),
-    Guardian(2, "이민호", "친구", GuardianStatus.Accepted),
-    Guardian(3, "박선영", "이웃", GuardianStatus.Pending),
-)

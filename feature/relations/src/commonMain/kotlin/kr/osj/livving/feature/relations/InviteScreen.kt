@@ -30,6 +30,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun InviteScreen(
+    inviteLink: String?,
     pendingCount: Int,
     acceptedCount: Int,
     onBackClick: () -> Unit,
@@ -69,12 +70,12 @@ fun InviteScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text("livving.app/join/AB12CD", color = LivvingCoral, fontWeight = FontWeight.Black)
+                Text(inviteLink ?: "아직 생성된 링크가 없어요", color = LivvingCoral, fontWeight = FontWeight.Black)
                 Text("복사", color = LivvingMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
-    if (pendingCount > 1) {
+    if (inviteLink != null) {
         Spacer(Modifier.height(14.dp))
         LivvingInfoBox(
             text = "그룹 초대 링크가 생성되었어요. 링크로 들어온 사람은 각자 수락 후 보호자로 연결됩니다.",

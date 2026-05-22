@@ -72,14 +72,27 @@ private val mainNavigationStateConfiguration = SavedStateConfiguration {
 
 @Composable
 fun MainRoute(
+    initialInviteCode: String? = null,
     viewModel: MainViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     val backStack = rememberNavBackStack(mainNavigationStateConfiguration, MainRoute.Splash)
 
+    LaunchedEffect(initialInviteCode) {
+        if (initialInviteCode != null) {
+            viewModel.openInvite(initialInviteCode)
+        }
+    }
+
     LaunchedEffect(state.sessionChecked, state.startRoute) {
         if (state.sessionChecked && backStack.lastOrNull() == MainRoute.Splash) {
             backStack.replaceWith(state.startRoute)
+        }
+    }
+
+    LaunchedEffect(state.inviteRequest) {
+        if (state.inviteRequest != null && backStack.lastOrNull() != MainRoute.Request) {
+            backStack.navigateTo(MainRoute.Request)
         }
     }
 
@@ -355,6 +368,13 @@ private fun MainEntryContent(
                         RelationGuardianStatus.Accepted
                     },
                 )
+            } + state.activeInvites.map { invite ->
+                RelationGuardianUiModel(
+                    id = invite.id.hashCode().toLong(),
+                    name = "초대 링크",
+                    relation = invite.inviteLink,
+                    status = RelationGuardianStatus.Pending,
+                )
             },
             watchingUsers = seedWatchingUsers,
             deadline = state.deadline,
@@ -380,7 +400,8 @@ private fun MainEntryContent(
             },
         )
         MainRoute.Invite -> InviteScreen(
-            pendingCount = state.guardians.count { it.status == GuardianStatus.Pending },
+            inviteLink = state.activeInvites.firstOrNull()?.inviteLink,
+            pendingCount = state.activeInvites.size,
             acceptedCount = state.guardians.count { it.status == GuardianStatus.Accepted },
             onBackClick = onBack,
             onCreateInviteClick = { onIntent(MainIntent.CreateInvite) },
@@ -404,9 +425,16 @@ private fun MainEntryContent(
             onConfirmClick = { onReplace(MainRoute.Notifications) },
         )
         MainRoute.Request -> RequestScreen(
+            ownerName = state.inviteRequest?.ownerName ?: "알 수 없는 사용자",
             onBackClick = onBack,
-            onAcceptClick = { onReplace(MainRoute.Relations) },
-            onRejectClick = { onReplace(MainRoute.Notifications) },
+            onAcceptClick = {
+                onIntent(MainIntent.AcceptInvite)
+                onReplace(MainRoute.Relations)
+            },
+            onRejectClick = {
+                onIntent(MainIntent.RejectInvite)
+                onReplace(MainRoute.Home)
+            },
         )
         MainRoute.Settings -> SettingsScreen(
             deadline = state.deadline,

@@ -1,6 +1,7 @@
 package kr.osj.livving.core.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -123,7 +124,7 @@ fun LivvingLogo(
     modifier: Modifier = Modifier,
     small: Boolean = false,
 ) {
-    androidx.compose.foundation.Image(
+    Image(
         painter = painterResource(Res.drawable.livving_logo),
         contentDescription = "livving",
         modifier = modifier
@@ -147,14 +148,25 @@ fun LivvingHeader(
                 .fillMaxWidth()
                 .height(44.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            when {
-                onBack != null -> LivvingIconCircle(icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft, onClick = onBack)
-                showLogo -> LivvingLogo(small = true)
-                else -> Spacer(Modifier.width(44.dp))
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier.align(Alignment.CenterStart),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    when {
+                        onBack != null -> LivvingIconCircle(icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft, onClick = onBack)
+                        showLogo -> LivvingLogo(small = true)
+                        else -> Spacer(Modifier.width(44.dp))
+                    }
+                }
+                Box(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    contentAlignment = Alignment.CenterEnd,
+                ) {
+                    right?.invoke() ?: Spacer(Modifier.width(44.dp))
+                }
             }
-            right?.invoke() ?: Spacer(Modifier.width(44.dp))
         }
         if (title != null) {
             Spacer(Modifier.height(28.dp))
@@ -170,12 +182,12 @@ fun LivvingHeader(
             Spacer(Modifier.height(8.dp))
             Text(
                 text = sub,
-                fontSize = 15.sp,
-                lineHeight = 23.sp,
                 color = LivvingMuted,
+                fontSize = 15.sp,
+                lineHeight = 22.sp,
             )
         }
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(26.dp))
     }
 }
 

@@ -8,6 +8,19 @@ data class Guardian(
     val inviteCode: String? = null,
 )
 
+data class GuardianInvite(
+    val id: String,
+    val inviteCode: String,
+) {
+    val inviteLink: String get() = "https://livving.app/join/$inviteCode"
+}
+
+data class GuardianInviteRequest(
+    val inviteCode: String,
+    val ownerUserId: String,
+    val ownerName: String,
+)
+
 data class CheckInCompletion(
     val lastCheckedAt: String,
     val status: CheckInStatus,

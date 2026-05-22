@@ -10,12 +10,12 @@ import org.koin.dsl.koinConfiguration
 
 @Composable
 @Preview
-fun App() {
+fun App(initialInviteCode: String? = null) {
     KoinApplication(configuration = koinConfiguration {
         modules(appModule)
     }) {
         LivvingTheme {
-            MainRoute()
+            MainRoute(initialInviteCode = initialInviteCode)
         }
     }
 }

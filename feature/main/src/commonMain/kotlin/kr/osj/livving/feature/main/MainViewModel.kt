@@ -4,9 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kr.osj.livving.domain.livving.CheckInStatus
 import kr.osj.livving.domain.livving.InitialUserSettings
+import kr.osj.livving.domain.livving.usecase.AcceptGuardianInviteUseCase
 import kr.osj.livving.domain.livving.usecase.CompleteCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.CreateGuardianInviteUseCase
+import kr.osj.livving.domain.livving.usecase.GetActiveInviteLinksUseCase
 import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
+import kr.osj.livving.domain.livving.usecase.GetGuardianInviteRequestUseCase
+import kr.osj.livving.domain.livving.usecase.GetMyGuardiansUseCase
 import kr.osj.livving.domain.livving.usecase.GetTodayCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
@@ -19,6 +23,10 @@ class MainViewModel(
     private val completeCheckInUseCase: CompleteCheckInUseCase,
     private val toggleLateCheckInUseCase: ToggleLateCheckInUseCase,
     private val createGuardianInviteUseCase: CreateGuardianInviteUseCase,
+    private val getMyGuardiansUseCase: GetMyGuardiansUseCase,
+    private val getActiveInviteLinksUseCase: GetActiveInviteLinksUseCase,
+    private val getGuardianInviteRequestUseCase: GetGuardianInviteRequestUseCase,
+    private val acceptGuardianInviteUseCase: AcceptGuardianInviteUseCase,
     private val getCurrentAuthSessionUseCase: GetCurrentAuthSessionUseCase,
     private val getTodayCheckInUseCase: GetTodayCheckInUseCase,
     private val saveInitialUserSettingsUseCase: SaveInitialUserSettingsUseCase,
@@ -42,6 +50,8 @@ class MainViewModel(
             MainIntent.ToggleAllTerms -> toggleAllTerms()
             is MainIntent.SelectRelationTab -> update { it.copy(relationTab = intent.tab) }
             MainIntent.CreateInvite -> createInvite()
+            MainIntent.AcceptInvite -> acceptInvite()
+            MainIntent.RejectInvite -> update { it.copy(inviteRequest = null, pendingInviteCode = null) }
             MainIntent.TogglePush -> update { it.copy(pushEnabled = !it.pushEnabled) }
             MainIntent.ToggleRelationPush -> update { it.copy(relationPushEnabled = !it.relationPushEnabled) }
             MainIntent.ToggleMissedPush -> update { it.copy(missedPushEnabled = !it.missedPushEnabled) }
@@ -106,9 +116,9 @@ class MainViewModel(
         viewModelScope.launch {
             val userId = _state.value.currentUser?.id ?: return@launch
             runCatching { createGuardianInviteUseCase(userId) }
-                .onSuccess { guardian ->
+                .onSuccess { invite ->
                     update {
-                        it.copy(guardians = it.guardians + guardian)
+                        it.copy(activeInvites = listOf(invite) + it.activeInvites)
                     }
                 }
         }
@@ -119,18 +129,30 @@ class MainViewModel(
             val session = getCurrentAuthSessionUseCase()
             val todayCheckIn = session?.user?.id
                 ?.let { userId -> runCatching { getTodayCheckInUseCase(userId) }.getOrNull() }
+            val guardians = session?.user?.id
+                ?.let { userId -> runCatching { getMyGuardiansUseCase(userId) }.getOrNull() }
+                .orEmpty()
+            val activeInvites = session?.user?.id
+                ?.let { userId -> runCatching { getActiveInviteLinksUseCase(userId) }.getOrNull() }
+                .orEmpty()
+            val inviteRequest = _state.value.pendingInviteCode
+                ?.let { inviteCode -> runCatching { getGuardianInviteRequestUseCase(inviteCode) }.getOrNull() }
             update {
                 it.copy(
                     sessionChecked = true,
                     currentUser = session?.user,
                     startRoute = when {
                         session == null -> MainRoute.Login
+                        inviteRequest != null -> MainRoute.Request
                         session.hasCompletedInitialSetup -> MainRoute.Home
                         else -> MainRoute.Terms
                     },
                     checked = todayCheckIn != null,
                     lastCheckedAt = todayCheckIn?.lastCheckedAt.orEmpty(),
                     status = todayCheckIn?.status ?: CheckInStatus.Before,
+                    guardians = guardians,
+                    activeInvites = activeInvites,
+                    inviteRequest = inviteRequest,
                 )
             }
         }
@@ -141,8 +163,17 @@ class MainViewModel(
             val session = getCurrentAuthSessionUseCase()
             val todayCheckIn = session?.user?.id
                 ?.let { userId -> runCatching { getTodayCheckInUseCase(userId) }.getOrNull() }
+            val guardians = session?.user?.id
+                ?.let { userId -> runCatching { getMyGuardiansUseCase(userId) }.getOrNull() }
+                .orEmpty()
+            val activeInvites = session?.user?.id
+                ?.let { userId -> runCatching { getActiveInviteLinksUseCase(userId) }.getOrNull() }
+                .orEmpty()
+            val inviteRequest = _state.value.pendingInviteCode
+                ?.let { inviteCode -> runCatching { getGuardianInviteRequestUseCase(inviteCode) }.getOrNull() }
             val route = when {
                 session == null -> MainRoute.Login
+                inviteRequest != null -> MainRoute.Request
                 session.hasCompletedInitialSetup -> MainRoute.Home
                 else -> MainRoute.Terms
             }
@@ -154,6 +185,9 @@ class MainViewModel(
                     checked = todayCheckIn != null,
                     lastCheckedAt = todayCheckIn?.lastCheckedAt.orEmpty(),
                     status = todayCheckIn?.status ?: CheckInStatus.Before,
+                    guardians = guardians,
+                    activeInvites = activeInvites,
+                    inviteRequest = inviteRequest,
                 )
             }
             onReady(route)
@@ -176,6 +210,43 @@ class MainViewModel(
             )
             update { it.copy(startRoute = MainRoute.Home) }
             onSaved()
+        }
+    }
+
+    fun openInvite(inviteCode: String) {
+        viewModelScope.launch {
+            update { it.copy(pendingInviteCode = inviteCode) }
+            val session = _state.value.currentUser
+            if (session == null) {
+                update { it.copy(startRoute = MainRoute.Login) }
+                return@launch
+            }
+            val request = runCatching { getGuardianInviteRequestUseCase(inviteCode) }.getOrNull()
+            update {
+                it.copy(
+                    inviteRequest = request,
+                    startRoute = if (request != null) MainRoute.Request else it.startRoute,
+                )
+            }
+        }
+    }
+
+    private fun acceptInvite() {
+        viewModelScope.launch {
+            val userId = _state.value.currentUser?.id ?: return@launch
+            val inviteCode = _state.value.inviteRequest?.inviteCode ?: return@launch
+            runCatching { acceptGuardianInviteUseCase(inviteCode, userId) }
+                .onSuccess {
+                    val guardians = runCatching { getMyGuardiansUseCase(userId) }.getOrNull().orEmpty()
+                    update {
+                        it.copy(
+                            guardians = guardians,
+                            inviteRequest = null,
+                            pendingInviteCode = null,
+                            relationTab = kr.osj.livving.feature.relations.RelationsTab.Watching,
+                        )
+                    }
+                }
         }
     }
 

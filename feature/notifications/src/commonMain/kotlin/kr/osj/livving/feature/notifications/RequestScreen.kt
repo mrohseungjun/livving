@@ -16,6 +16,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun RequestScreen(
+    ownerName: String,
     onBackClick: () -> Unit,
     onAcceptClick: () -> Unit,
     onRejectClick: () -> Unit,
@@ -26,7 +27,7 @@ fun RequestScreen(
         showLogo = false,
         onBack = onBackClick,
     )
-    LivvingPersonHeader("박선영", "나를 보호자로 초대했어요", LivvingTone.Purple)
+    LivvingPersonHeader(ownerName, "나를 보호자로 초대했어요", LivvingTone.Purple)
     Spacer(Modifier.height(24.dp))
     LivvingCenterText("수락하면 안부 미확인 알림을 받을 수 있어요.", color = LivvingMuted)
     Spacer(Modifier.height(36.dp))
