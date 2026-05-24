@@ -1,5 +1,6 @@
 plugins {
     id("livving.compose.multiplatform.application")
+    id("livving.firebase.messaging")
     id("livving.koin.compose")
     id("livving.kakao.android")
     id("livving.google.services")

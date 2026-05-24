@@ -16,6 +16,13 @@ class SupabaseNotificationRepository(
 ) : NotificationRepository {
     override suspend fun registerPushToken(userId: String, registration: PushTokenRegistration) {
         client.from("push_tokens")
+            .update(mapOf("enabled" to false)) {
+                filter {
+                    filter("user_id", FilterOperator.EQ, userId)
+                }
+            }
+
+        client.from("push_tokens")
             .upsert(
                 PushTokenDto(
                     userId = userId,

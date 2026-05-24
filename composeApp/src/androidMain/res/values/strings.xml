@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Livving</string>
+    <string name="livving_notification_channel_id">livving_alerts</string>
+    <string name="livving_notification_channel_name">안부 알림</string>
     <string name="kakao_native_app_key">c37cffb47abdcddb86b83f5ce81fa328</string>
     <string name="kakao_redirect_scheme">kakaoc37cffb47abdcddb86b83f5ce81fa328</string>
 </resources>
