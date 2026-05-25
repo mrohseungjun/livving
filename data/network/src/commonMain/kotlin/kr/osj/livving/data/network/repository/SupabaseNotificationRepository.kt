@@ -39,6 +39,16 @@ class SupabaseNotificationRepository(
             }
     }
 
+    override suspend fun disablePushToken(userId: String, token: String) {
+        client.from("push_tokens")
+            .update(mapOf("enabled" to false)) {
+                filter {
+                    filter("user_id", FilterOperator.EQ, userId)
+                    filter("token", FilterOperator.EQ, token)
+                }
+            }
+    }
+
     override suspend fun getNotifications(userId: String): List<LivvingNotification> {
         return client.from("notification_events")
             .select {
@@ -77,6 +87,8 @@ class SupabaseNotificationRepository(
             tokenCount = dto.tokenCount,
             sentCount = dto.sentCount,
             failedCount = dto.failedCount,
+            disabledTokenCount = dto.disabledTokenCount,
+            firstError = dto.firstError,
         )
     }
 

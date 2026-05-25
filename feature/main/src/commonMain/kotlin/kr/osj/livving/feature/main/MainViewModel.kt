@@ -10,6 +10,7 @@ import kr.osj.livving.domain.livving.WatchingUser
 import kr.osj.livving.domain.livving.usecase.AcceptGuardianInviteUseCase
 import kr.osj.livving.domain.livving.usecase.CompleteCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.CreateGuardianInviteUseCase
+import kr.osj.livving.domain.livving.usecase.DisablePushTokenUseCase
 import kr.osj.livving.domain.livving.usecase.DisconnectGuardianUseCase
 import kr.osj.livving.domain.livving.usecase.GetActiveInviteLinksUseCase
 import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
@@ -47,6 +48,7 @@ class MainViewModel(
     private val saveInitialUserSettingsUseCase: SaveInitialUserSettingsUseCase,
     private val savePhoneContactUseCase: SavePhoneContactUseCase,
     private val registerPushTokenUseCase: RegisterPushTokenUseCase,
+    private val disablePushTokenUseCase: DisablePushTokenUseCase,
     private val getNotificationsUseCase: GetNotificationsUseCase,
     private val markNotificationReadUseCase: MarkNotificationReadUseCase,
     private val sendTestNotificationUseCase: SendTestNotificationUseCase,
@@ -368,6 +370,8 @@ class MainViewModel(
                         deviceId = token.deviceId,
                     ),
                 )
+            }.onSuccess {
+                update { it.copy(registeredPushToken = token) }
             }
         }
     }
@@ -397,7 +401,16 @@ class MainViewModel(
                             testNotificationMessage = when {
                                 result.tokenCount == 0 -> "등록된 푸시 토큰이 없어요. 알림 권한과 FCM 토큰 저장을 확인해 주세요."
                                 result.failedCount == 0 -> "테스트 알림을 ${result.sentCount}개 기기에 보냈어요."
-                                else -> "테스트 알림 ${result.sentCount}개 성공, ${result.failedCount}개 실패했어요."
+                                else -> buildString {
+                                    append("테스트 알림 ${result.sentCount}개 성공, ${result.failedCount}개 실패했어요.")
+                                    if (result.disabledTokenCount > 0) {
+                                        append(" 만료된 토큰 ${result.disabledTokenCount}개를 껐어요.")
+                                    }
+                                    result.firstError?.let { error ->
+                                        append(" 오류: ")
+                                        append(error.take(120))
+                                    }
+                                }
                             },
                         )
                     }
@@ -443,6 +456,12 @@ class MainViewModel(
 
     private fun logout() {
         viewModelScope.launch {
+            val current = _state.value
+            val userId = current.currentUser?.id
+            val token = current.registeredPushToken?.token
+            if (userId != null && token != null) {
+                runCatching { disablePushTokenUseCase(userId, token) }
+            }
             runCatching { logoutUseCase() }
             update {
                 MainState(

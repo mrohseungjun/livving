@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 type PushToken = {
+  id: number;
   token: string;
   platform: "android" | "ios";
 };
@@ -39,7 +40,7 @@ Deno.serve(async (request) => {
 
   const { data: tokens, error: tokenError } = await supabase
     .from("push_tokens")
-    .select("token, platform")
+    .select("id, token, platform")
     .eq("user_id", userData.user.id)
     .eq("enabled", true);
   if (tokenError) {
@@ -63,11 +64,23 @@ Deno.serve(async (request) => {
   );
   const sentCount = results.filter((result) => result.ok).length;
   const failedCount = results.length - sentCount;
+  const invalidTokenIds = results
+    .filter((result) => !result.ok && isInvalidFcmTokenError(result.error ?? ""))
+    .map((result) => result.tokenId);
+
+  if (invalidTokenIds.length > 0) {
+    await supabase
+      .from("push_tokens")
+      .update({ enabled: false, updated_at: new Date().toISOString() })
+      .in("id", invalidTokenIds);
+  }
 
   return jsonResponse({
     token_count: pushTokens.length,
     sent_count: sentCount,
     failed_count: failedCount,
+    disabled_token_count: invalidTokenIds.length,
+    first_error: results.find((result) => !result.ok)?.error ?? null,
   });
 });
 
@@ -91,7 +104,7 @@ async function sendFcmMessage(
   projectId: string,
   accessToken: string,
   pushToken: PushToken,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; tokenId: number; error?: string }> {
   const response = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: "POST",
     headers: {
@@ -134,8 +147,14 @@ async function sendFcmMessage(
     }),
   });
 
-  if (response.ok) return { ok: true };
-  return { ok: false, error: await response.text() };
+  if (response.ok) return { ok: true, tokenId: pushToken.id };
+  return { ok: false, tokenId: pushToken.id, error: await response.text() };
+}
+
+function isInvalidFcmTokenError(error: string): boolean {
+  return error.includes("UNREGISTERED") ||
+    error.includes("INVALID_ARGUMENT") ||
+    error.includes("registration-token-not-registered");
 }
 
 async function createGoogleAccessToken(serviceAccount: ServiceAccount): Promise<string> {

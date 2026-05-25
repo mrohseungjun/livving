@@ -41,6 +41,7 @@ data class MainState(
     val pushEnabled: Boolean = true,
     val relationPushEnabled: Boolean = true,
     val missedPushEnabled: Boolean = true,
+    val registeredPushToken: MainPushToken? = null,
     val testNotificationSending: Boolean = false,
     val testNotificationMessage: String? = null,
 )

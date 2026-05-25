@@ -184,6 +184,21 @@ class SupabaseRelationRepository(
             }
             .decodeSingle<GuardianRelationDto>()
 
+        runCatching {
+            client.from("notification_events")
+                .insert(
+                    mapOf(
+                        "recipient_user_id" to invite.ownerUserId,
+                        "actor_user_id" to guardianUserId,
+                        "event_type" to "relation_accepted",
+                        "title" to "보호자 연결 완료",
+                        "body" to "${guardian.nickname}님이 보호자 요청을 수락했어요.",
+                        "related_user_id" to guardianUserId,
+                        "guardian_relation_id" to relation.id,
+                    ),
+                )
+        }
+
         return relation.toDomain()
     }
 

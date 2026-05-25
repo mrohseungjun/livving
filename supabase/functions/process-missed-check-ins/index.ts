@@ -4,8 +4,10 @@ type PendingMessage = {
   event_id: string;
   recipient_user_id: string;
   related_user_id: string;
+  push_token_id: number;
   token: string;
   platform: "android" | "ios";
+  event_type: "missed_check_in" | "guardian_request" | "relation_accepted";
   title: string;
   body: string;
 };
@@ -60,6 +62,7 @@ Deno.serve(async (request) => {
   const messages = (data ?? []) as PendingMessage[];
   const sentEventIds = new Set<string>();
   const failedEvents = new Map<string, string>();
+  const invalidTokenIds = new Set<number>();
 
   for (const message of messages) {
     const result = await sendFcmMessage(projectId, accessToken, message);
@@ -67,6 +70,9 @@ Deno.serve(async (request) => {
       sentEventIds.add(message.event_id);
     } else if (!sentEventIds.has(message.event_id)) {
       failedEvents.set(message.event_id, result.error);
+      if (isInvalidFcmTokenError(result.error)) {
+        invalidTokenIds.add(message.push_token_id);
+      }
     }
   }
 
@@ -82,6 +88,12 @@ Deno.serve(async (request) => {
         .from("notification_events")
         .update({ status: "failed", error_message: errorMessage })
         .eq("id", eventId)
+    ),
+    ...Array.from(invalidTokenIds).map((tokenId) =>
+      supabase
+        .from("push_tokens")
+        .update({ enabled: false, updated_at: new Date().toISOString() })
+        .eq("id", tokenId)
     ),
   ]);
 
@@ -120,7 +132,7 @@ async function sendFcmMessage(
         },
         data: {
           eventId: message.event_id,
-          type: "missed_check_in",
+          type: message.event_type,
           relatedUserId: message.related_user_id,
         },
         android: {
@@ -150,6 +162,12 @@ async function sendFcmMessage(
 
   if (response.ok) return { ok: true };
   return { ok: false, error: await response.text() };
+}
+
+function isInvalidFcmTokenError(error: string): boolean {
+  return error.includes("UNREGISTERED") ||
+    error.includes("INVALID_ARGUMENT") ||
+    error.includes("registration-token-not-registered");
 }
 
 async function createGoogleAccessToken(serviceAccount: ServiceAccount): Promise<string> {

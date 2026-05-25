@@ -3,6 +3,7 @@ package kr.osj.livving.domain.livving.di
 import kr.osj.livving.domain.livving.usecase.AcceptGuardianInviteUseCase
 import kr.osj.livving.domain.livving.usecase.CompleteCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.CreateGuardianInviteUseCase
+import kr.osj.livving.domain.livving.usecase.DisablePushTokenUseCase
 import kr.osj.livving.domain.livving.usecase.DisconnectGuardianUseCase
 import kr.osj.livving.domain.livving.usecase.GetActiveInviteLinksUseCase
 import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
@@ -40,6 +41,7 @@ val livvingDomainModule = module {
     factory { SaveInitialUserSettingsUseCase(get()) }
     factory { SavePhoneContactUseCase(get()) }
     factory { RegisterPushTokenUseCase(get()) }
+    factory { DisablePushTokenUseCase(get()) }
     factory { GetNotificationsUseCase(get()) }
     factory { MarkNotificationReadUseCase(get()) }
     factory { SendTestNotificationUseCase(get()) }

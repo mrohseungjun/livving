@@ -32,6 +32,8 @@ data class TestNotificationResultDto(
     @SerialName("token_count") val tokenCount: Int = 0,
     @SerialName("sent_count") val sentCount: Int = 0,
     @SerialName("failed_count") val failedCount: Int = 0,
+    @SerialName("disabled_token_count") val disabledTokenCount: Int = 0,
+    @SerialName("first_error") val firstError: String? = null,
 )
 
 @Serializable

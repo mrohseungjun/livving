@@ -45,6 +45,8 @@ data class TestNotificationResult(
     val tokenCount: Int,
     val sentCount: Int,
     val failedCount: Int,
+    val disabledTokenCount: Int = 0,
+    val firstError: String? = null,
 )
 
 data class LivvingNotification(

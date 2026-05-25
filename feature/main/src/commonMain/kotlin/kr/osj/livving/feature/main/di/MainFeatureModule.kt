@@ -39,6 +39,7 @@ val mainFeatureModule = module {
             saveInitialUserSettingsUseCase = get(),
             savePhoneContactUseCase = get(),
             registerPushTokenUseCase = get(),
+            disablePushTokenUseCase = get(),
             getNotificationsUseCase = get(),
             markNotificationReadUseCase = get(),
             sendTestNotificationUseCase = get(),

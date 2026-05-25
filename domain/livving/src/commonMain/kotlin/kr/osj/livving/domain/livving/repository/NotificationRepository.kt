@@ -6,6 +6,7 @@ import kr.osj.livving.domain.livving.TestNotificationResult
 
 interface NotificationRepository {
     suspend fun registerPushToken(userId: String, registration: PushTokenRegistration)
+    suspend fun disablePushToken(userId: String, token: String)
     suspend fun getNotifications(userId: String): List<LivvingNotification>
     suspend fun markNotificationRead(userId: String, notificationId: String)
     suspend fun sendTestNotification(userId: String): TestNotificationResult
