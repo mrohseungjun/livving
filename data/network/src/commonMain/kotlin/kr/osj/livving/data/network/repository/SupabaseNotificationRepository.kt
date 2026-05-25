@@ -6,24 +6,29 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
+import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.url
+import io.ktor.client.statement.bodyAsText
+import kr.osj.livving.core.platform.livvingLogD
+import kr.osj.livving.data.network.NetworkConfig
 import kr.osj.livving.data.network.dto.NotificationEventDto
 import kr.osj.livving.data.network.dto.TestNotificationResultDto
-import kr.osj.livving.data.network.NetworkConfig
 import kr.osj.livving.domain.livving.LivvingNotification
 import kr.osj.livving.domain.livving.LivvingNotificationType
 import kr.osj.livving.domain.livving.PushTokenRegistration
 import kr.osj.livving.domain.livving.TestNotificationResult
 import kr.osj.livving.domain.livving.repository.NotificationRepository
+import kotlinx.serialization.json.Json
 
 class SupabaseNotificationRepository(
     private val client: SupabaseClient,
     private val httpClient: HttpClient,
     private val config: NetworkConfig,
 ) : NotificationRepository {
+    private val json = Json { ignoreUnknownKeys = true }
+
     override suspend fun registerPushToken(userId: String, registration: PushTokenRegistration) {
         client.from("push_tokens")
             .upsert(
@@ -76,13 +81,34 @@ class SupabaseNotificationRepository(
     override suspend fun sendTestNotification(userId: String): TestNotificationResult {
         check(userId.isNotBlank()) { "User id is required to send a test notification" }
         client.auth.awaitInitialization()
+        runCatching {
+            client.auth.refreshCurrentSession()
+        }.onSuccess {
+            livvingLogD("LivvingPushTest", "session refreshed before test notification userId=$userId")
+        }.onFailure { throwable ->
+            livvingLogD("LivvingPushTest", "session refresh skipped or failed ${throwable.message}")
+        }
         val accessToken = client.auth.currentAccessTokenOrNull()
             ?: error("Supabase session is required to send a test notification")
-        val dto = httpClient.post {
+        livvingLogD(
+            tag = "LivvingPushTest",
+            message = "request userId=$userId url=${config.supabaseClientUrl}/functions/v1/send-test-notification",
+        )
+        val response = httpClient.post {
+            expectSuccess = false
             url("${config.supabaseClientUrl}/functions/v1/send-test-notification")
             header("Authorization", "Bearer $accessToken")
             header("apikey", config.supabaseAnonKey)
-        }.body<TestNotificationResultDto>()
+        }
+        val rawBody = response.bodyAsText()
+        livvingLogD(
+            tag = "LivvingPushTest",
+            message = "response status=${response.status.value} body=$rawBody",
+        )
+        if (response.status.value !in 200..299) {
+            error("Test notification failed: status=${response.status.value}, body=$rawBody")
+        }
+        val dto = json.decodeFromString<TestNotificationResultDto>(rawBody)
         return TestNotificationResult(
             tokenCount = dto.tokenCount,
             sentCount = dto.sentCount,

@@ -11,8 +11,20 @@ private object AndroidPushTokenClient : PushTokenClient {
     override suspend fun getToken(): PlatformPushToken? {
         val token = suspendCancellableCoroutine<String?> { continuation ->
             FirebaseMessaging.getInstance().token
-                .addOnSuccessListener { value -> continuation.resume(value) }
-                .addOnFailureListener { continuation.resume(null) }
+                .addOnSuccessListener { value ->
+                    livvingLogD(
+                        tag = "LivvingPushToken",
+                        message = "fcm token fetched tokenPrefix=${value.take(12)}",
+                    )
+                    continuation.resume(value)
+                }
+                .addOnFailureListener { throwable ->
+                    livvingLogD(
+                        tag = "LivvingPushToken",
+                        message = "fcm token fetch failed ${throwable::class.simpleName}: ${throwable.message}",
+                    )
+                    continuation.resume(null)
+                }
         } ?: return null
 
         val context = AndroidTextShareContext.requireContext()

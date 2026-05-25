@@ -2,6 +2,7 @@ package kr.osj.livving.feature.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kr.osj.livving.core.platform.livvingLogD
 import kr.osj.livving.domain.livving.CheckInStatus
 import kr.osj.livving.domain.livving.InitialUserSettings
 import kr.osj.livving.domain.livving.LivvingNotificationType
@@ -80,6 +81,18 @@ class MainViewModel(
             MainIntent.TogglePhoneCallEnabled -> update { it.copy(phoneCallEnabled = !it.phoneCallEnabled) }
             MainIntent.SavePhoneContact -> savePhoneContact()
             is MainIntent.RegisterPushToken -> registerPushToken(intent.token)
+            MainIntent.PushTokenFetchStarted -> update {
+                it.copy(
+                    pushTokenRegistering = true,
+                    pushTokenMessage = null,
+                )
+            }
+            MainIntent.PushTokenFetchFailed -> update {
+                it.copy(
+                    pushTokenRegistering = false,
+                    pushTokenMessage = "이 기기의 푸시 토큰을 아직 받을 수 없어요. 알림 권한과 Google Play 서비스를 확인해 주세요.",
+                )
+            }
             MainIntent.LoadNotifications -> loadNotifications()
             is MainIntent.SelectNotification -> selectNotification(intent.notificationId)
             MainIntent.CreateInvite -> createInvite()
@@ -328,10 +341,27 @@ class MainViewModel(
         viewModelScope.launch {
             val current = _state.value
             val userId = current.currentUser?.id ?: return@launch
-            saveInitialUserSettingsUseCase(
-                userId = userId,
-                settings = current.toInitialUserSettings(),
-            )
+            update { it.copy(settingsSaving = true, settingsMessage = null) }
+            runCatching {
+                saveInitialUserSettingsUseCase(
+                    userId = userId,
+                    settings = current.toInitialUserSettings(),
+                )
+            }.onSuccess {
+                update {
+                    it.copy(
+                        settingsSaving = false,
+                        settingsMessage = "설정이 저장됐어요.",
+                    )
+                }
+            }.onFailure {
+                update {
+                    it.copy(
+                        settingsSaving = false,
+                        settingsMessage = "설정 저장에 실패했어요. 잠시 후 다시 시도해 주세요.",
+                    )
+                }
+            }
         }
     }
 
@@ -361,6 +391,10 @@ class MainViewModel(
     private fun registerPushToken(token: MainPushToken) {
         viewModelScope.launch {
             val userId = _state.value.currentUser?.id ?: return@launch
+            livvingLogD(
+                tag = "LivvingPushTest",
+                message = "register token platform=${token.platform} deviceId=${token.deviceId} tokenPrefix=${token.token.take(12)}",
+            )
             runCatching {
                 registerPushTokenUseCase(
                     userId = userId,
@@ -371,7 +405,28 @@ class MainViewModel(
                     ),
                 )
             }.onSuccess {
-                update { it.copy(registeredPushToken = token) }
+                livvingLogD(
+                    tag = "LivvingPushTest",
+                    message = "register token success userId=$userId",
+                )
+                update {
+                    it.copy(
+                        registeredPushToken = token,
+                        pushTokenRegistering = false,
+                        pushTokenMessage = "이 기기의 푸시 토큰이 등록됐어요.",
+                    )
+                }
+            }.onFailure { throwable ->
+                livvingLogD(
+                    tag = "LivvingPushTest",
+                    message = "register token failed ${throwable.message}",
+                )
+                update {
+                    it.copy(
+                        pushTokenRegistering = false,
+                        pushTokenMessage = "푸시 토큰 저장에 실패했어요. 잠시 후 다시 시도해 주세요.",
+                    )
+                }
             }
         }
     }
@@ -387,6 +442,10 @@ class MainViewModel(
     private fun sendTestNotification() {
         viewModelScope.launch {
             val userId = _state.value.currentUser?.id ?: return@launch
+            livvingLogD(
+                tag = "LivvingPushTest",
+                message = "send requested userId=$userId registeredToken=${_state.value.registeredPushToken?.platform}:${_state.value.registeredPushToken?.token?.take(12)}",
+            )
             update {
                 it.copy(
                     testNotificationSending = true,
@@ -395,6 +454,12 @@ class MainViewModel(
             }
             runCatching { sendTestNotificationUseCase(userId) }
                 .onSuccess { result ->
+                    livvingLogD(
+                        tag = "LivvingPushTest",
+                        message = "send result tokenCount=${result.tokenCount} " +
+                            "sent=${result.sentCount} failed=${result.failedCount} " +
+                            "disabled=${result.disabledTokenCount} firstError=${result.firstError}",
+                    )
                     update {
                         it.copy(
                             testNotificationSending = false,
@@ -415,11 +480,15 @@ class MainViewModel(
                         )
                     }
                 }
-                .onFailure {
+                .onFailure { throwable ->
+                    livvingLogD(
+                        tag = "LivvingPushTest",
+                        message = "send failed ${throwable::class.simpleName}: ${throwable.message}",
+                    )
                     update {
                         it.copy(
                             testNotificationSending = false,
-                            testNotificationMessage = "테스트 알림 전송에 실패했어요.",
+                            testNotificationMessage = "테스트 알림 전송에 실패했어요. ${throwable.message.orEmpty().take(120)}",
                         )
                     }
                 }
@@ -473,8 +542,41 @@ class MainViewModel(
     }
 
     private fun toggleAndSaveSettings(block: (MainState) -> MainState) {
-        update(block)
-        saveCurrentSettings()
+        val before = _state.value
+        val next = block(before).copy(settingsSaving = true, settingsMessage = null)
+        update { next }
+        viewModelScope.launch {
+            val userId = next.currentUser?.id
+            if (userId == null) {
+                update {
+                    before.copy(
+                        settingsSaving = false,
+                        settingsMessage = "로그인 정보를 확인할 수 없어요.",
+                    )
+                }
+                return@launch
+            }
+            runCatching {
+                saveInitialUserSettingsUseCase(
+                    userId = userId,
+                    settings = next.toInitialUserSettings(),
+                )
+            }.onSuccess {
+                update {
+                    it.copy(
+                        settingsSaving = false,
+                        settingsMessage = "설정이 저장됐어요.",
+                    )
+                }
+            }.onFailure {
+                update {
+                    before.copy(
+                        settingsSaving = false,
+                        settingsMessage = "설정 저장에 실패했어요. 잠시 후 다시 시도해 주세요.",
+                    )
+                }
+            }
+        }
     }
 
     fun openInvite(inviteCode: String) {

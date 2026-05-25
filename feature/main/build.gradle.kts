@@ -8,6 +8,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(projects.core.platform)
             implementation(projects.core.ui)
             implementation(projects.domain.livving)
             implementation(projects.feature.auth)

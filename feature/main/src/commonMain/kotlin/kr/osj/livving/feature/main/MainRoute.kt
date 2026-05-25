@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -41,6 +42,7 @@ import kr.osj.livving.feature.setup.DeadlineScreen
 import kr.osj.livving.feature.setup.DelayScreen
 import kr.osj.livving.feature.splash.SplashScreen
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
@@ -84,6 +86,7 @@ fun MainRoute(
 ) {
     val state by viewModel.state.collectAsState()
     val backStack = rememberNavBackStack(mainNavigationStateConfiguration, MainRoute.Splash)
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(initialInviteCode) {
         if (initialInviteCode != null) {
@@ -97,9 +100,20 @@ fun MainRoute(
         }
     }
 
+    suspend fun fetchAndRegisterPushToken() {
+        viewModel.onIntent(MainIntent.PushTokenFetchStarted)
+        val token = runCatching { onFetchPushToken() }.getOrNull()
+        if (token != null) {
+            viewModel.onIntent(MainIntent.RegisterPushToken(token))
+        } else {
+            viewModel.onIntent(MainIntent.PushTokenFetchFailed)
+        }
+    }
+
     LaunchedEffect(state.currentUser?.id, state.pushEnabled) {
         if (state.currentUser != null && state.pushEnabled) {
             repeat(PUSH_TOKEN_REGISTRATION_RETRY_COUNT) { attempt ->
+                viewModel.onIntent(MainIntent.PushTokenFetchStarted)
                 val token = runCatching { onFetchPushToken() }.getOrNull()
                 if (token != null) {
                     viewModel.onIntent(MainIntent.RegisterPushToken(token))
@@ -109,6 +123,7 @@ fun MainRoute(
                     delay(PUSH_TOKEN_REGISTRATION_RETRY_DELAY_MILLIS)
                 }
             }
+            viewModel.onIntent(MainIntent.PushTokenFetchFailed)
         }
     }
 
@@ -124,6 +139,11 @@ fun MainRoute(
         onCallPhone = onCallPhone,
         onCopyText = onCopyText,
         onShareText = onShareText,
+        onRetryPushToken = {
+            scope.launch {
+                fetchAndRegisterPushToken()
+            }
+        },
     )
 }
 
@@ -143,6 +163,7 @@ fun MainScreen(
     onCallPhone: (String) -> Unit,
     onCopyText: (String) -> Unit,
     onShareText: (String) -> Unit,
+    onRetryPushToken: () -> Unit,
 ) {
     MainNavDisplay(
         state = state,
@@ -156,6 +177,7 @@ fun MainScreen(
         onCallPhone = onCallPhone,
         onCopyText = onCopyText,
         onShareText = onShareText,
+        onRetryPushToken = onRetryPushToken,
     )
 }
 
@@ -172,70 +194,71 @@ private fun MainNavDisplay(
     onCallPhone: (String) -> Unit,
     onCopyText: (String) -> Unit,
     onShareText: (String) -> Unit,
+    onRetryPushToken: () -> Unit,
 ) {
     NavDisplay(
         backStack = backStack,
         onBack = onBack,
         entryProvider = entryProvider {
             entry<MainRoute.Splash> {
-                MainEntry(MainRoute.Splash, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Splash, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Login> {
-                MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Login, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Terms> {
-                MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Terms, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.SetupDeadline> {
-                MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.SetupDeadline, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.SetupDelay> {
-                MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.SetupDelay, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Home> {
-                MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Home, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.History> {
-                MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.History, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Relations> {
-                MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Relations, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Invite> {
-                MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Invite, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.InviteStatus> {
-                MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.InviteStatus, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.GuardianDetail> {
-                MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.GuardianDetail, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Notifications> {
-                MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Notifications, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Alert> {
-                MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Alert, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Request> {
-                MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Request, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Settings> {
-                MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Settings, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Schedule> {
-                MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Schedule, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Profile> {
-                MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Profile, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.Privacy> {
-                MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.Privacy, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.DeadlineChange> {
-                MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.DeadlineChange, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
             entry<MainRoute.DelaySetting> {
-                MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText)
+                MainEntry(MainRoute.DelaySetting, state, onIntent, onNavigate, onReplace, onBack, onLoginSuccess, onSaveInitialSettings, onCallPhone, onCopyText, onShareText, onRetryPushToken)
             }
         },
     )
@@ -254,6 +277,7 @@ private fun MainEntry(
     onCallPhone: (String) -> Unit,
     onCopyText: (String) -> Unit,
     onShareText: (String) -> Unit,
+    onRetryPushToken: () -> Unit,
 ) {
     when (route) {
         MainRoute.Splash -> SplashScreen(
@@ -280,6 +304,7 @@ private fun MainEntry(
                 onCallPhone = onCallPhone,
                 onCopyText = onCopyText,
                 onShareText = onShareText,
+                onRetryPushToken = onRetryPushToken,
             )
         }
     }
@@ -346,6 +371,7 @@ private fun MainEntryContent(
     onCallPhone: (String) -> Unit,
     onCopyText: (String) -> Unit,
     onShareText: (String) -> Unit,
+    onRetryPushToken: () -> Unit,
 ) {
     when (route) {
         MainRoute.Splash -> Unit
@@ -596,6 +622,11 @@ private fun MainEntryContent(
             pushEnabled = state.pushEnabled,
             relationPushEnabled = state.relationPushEnabled,
             missedPushEnabled = state.missedPushEnabled,
+            hasRegisteredPushToken = state.registeredPushToken != null,
+            pushTokenRegistering = state.pushTokenRegistering,
+            pushTokenMessage = state.pushTokenMessage,
+            settingsSaving = state.settingsSaving,
+            settingsMessage = state.settingsMessage,
             testNotificationSending = state.testNotificationSending,
             testNotificationMessage = state.testNotificationMessage,
             onDeadlineClick = {
@@ -608,6 +639,7 @@ private fun MainEntryContent(
             onRelationPushToggleClick = { onIntent(MainIntent.ToggleRelationPush) },
             onMissedPushToggleClick = { onIntent(MainIntent.ToggleMissedPush) },
             onSendTestNotificationClick = { onIntent(MainIntent.SendTestNotification) },
+            onRetryPushTokenClick = { onRetryPushToken() },
             onProfileClick = { onNavigate(MainRoute.Profile) },
             onPrivacyClick = { onNavigate(MainRoute.Privacy) },
             onLogoutClick = {

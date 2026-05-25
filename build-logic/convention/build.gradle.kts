@@ -113,6 +113,10 @@ gradlePlugin {
             id = "livving.firebase.messaging"
             implementationClass = "FirebaseMessagingConventionPlugin"
         }
+        register("timberLogging") {
+            id = "livving.timber.logging"
+            implementationClass = "TimberLoggingConventionPlugin"
+        }
         register("googleServices") {
             id = "livving.google.services"
             implementationClass = "GoogleServicesConventionPlugin"
