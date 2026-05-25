@@ -40,6 +40,7 @@ val mainFeatureModule = module {
             registerPushTokenUseCase = get(),
             getNotificationsUseCase = get(),
             markNotificationReadUseCase = get(),
+            logoutUseCase = get(),
         )
     }
 }

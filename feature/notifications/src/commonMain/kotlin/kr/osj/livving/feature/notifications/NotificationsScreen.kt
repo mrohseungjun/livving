@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kr.osj.livving.core.ui.LivvingCenterText
 import kr.osj.livving.core.ui.LivvingHeader
+import kr.osj.livving.core.ui.LivvingInfoBox
 import kr.osj.livving.core.ui.LivvingMuted
 import kr.osj.livving.core.ui.LivvingNoticeRow
 import kr.osj.livving.core.ui.LivvingTone
@@ -25,14 +26,23 @@ data class NotificationUiModel(
 @Composable
 fun NotificationsScreen(
     notifications: List<NotificationUiModel>,
+    pushEnabled: Boolean,
+    relationPushEnabled: Boolean,
+    missedPushEnabled: Boolean,
     onNotificationClick: (NotificationUiModel) -> Unit,
-    onRequestClick: () -> Unit,
     viewModel: NotificationsViewModel = koinViewModel(),
 ) {
     LivvingHeader(
         title = "알림",
         sub = "요청과 안부 상태 알림을 확인해요.",
     )
+    if (!pushEnabled || !relationPushEnabled || !missedPushEnabled) {
+        LivvingInfoBox(
+            text = disabledNotificationText(pushEnabled, relationPushEnabled, missedPushEnabled),
+            tone = LivvingTone.Orange,
+        )
+        Spacer(Modifier.height(14.dp))
+    }
     if (notifications.isEmpty()) {
         LivvingCenterText("아직 도착한 알림이 없어요.", color = LivvingMuted)
         Spacer(Modifier.height(14.dp))
@@ -43,17 +53,22 @@ fun NotificationsScreen(
             time = notification.time,
             desc = notification.desc,
             tone = notification.tone,
+            read = notification.read,
             onClick = { onNotificationClick(notification) },
         )
         Spacer(Modifier.height(14.dp))
     }
-    LivvingNoticeRow(
-        title = "보호자 요청",
-        time = "지금",
-        desc = "박선영님이 나를 보호자로 초대했어요.",
-        tone = LivvingTone.Purple,
-        onClick = onRequestClick,
-    )
-    Spacer(Modifier.height(14.dp))
-    LivvingNoticeRow("연결 완료", "어제", "김지연님이 보호자 요청을 수락했어요.", LivvingTone.Green) {}
+}
+
+private fun disabledNotificationText(
+    pushEnabled: Boolean,
+    relationPushEnabled: Boolean,
+    missedPushEnabled: Boolean,
+): String {
+    return when {
+        !pushEnabled -> "푸시 알림이 꺼져 있어요. 설정에서 켜면 보호자 요청과 안부 미확인 알림을 받을 수 있어요."
+        !relationPushEnabled && !missedPushEnabled -> "관계 요청 알림과 안부 미확인 알림이 꺼져 있어요."
+        !relationPushEnabled -> "관계 요청 알림이 꺼져 있어요."
+        else -> "안부 미확인 알림이 꺼져 있어요."
+    }
 }

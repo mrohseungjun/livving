@@ -39,6 +39,7 @@ import kr.osj.livving.feature.settings.SettingsScreen
 import kr.osj.livving.feature.setup.DeadlineScreen
 import kr.osj.livving.feature.setup.DelayScreen
 import kr.osj.livving.feature.splash.SplashScreen
+import kotlinx.coroutines.delay
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
@@ -97,8 +98,15 @@ fun MainRoute(
 
     LaunchedEffect(state.currentUser?.id, state.pushEnabled) {
         if (state.currentUser != null && state.pushEnabled) {
-            onFetchPushToken()?.let { token ->
-                viewModel.onIntent(MainIntent.RegisterPushToken(token))
+            repeat(PUSH_TOKEN_REGISTRATION_RETRY_COUNT) { attempt ->
+                val token = runCatching { onFetchPushToken() }.getOrNull()
+                if (token != null) {
+                    viewModel.onIntent(MainIntent.RegisterPushToken(token))
+                    return@LaunchedEffect
+                }
+                if (attempt < PUSH_TOKEN_REGISTRATION_RETRY_COUNT - 1) {
+                    delay(PUSH_TOKEN_REGISTRATION_RETRY_DELAY_MILLIS)
+                }
             }
         }
     }
@@ -117,6 +125,9 @@ fun MainRoute(
         onShareText = onShareText,
     )
 }
+
+private const val PUSH_TOKEN_REGISTRATION_RETRY_COUNT = 6
+private const val PUSH_TOKEN_REGISTRATION_RETRY_DELAY_MILLIS = 2_000L
 
 @Composable
 fun MainScreen(
@@ -502,34 +513,45 @@ private fun MainEntryContent(
                 },
             )
         }
-        MainRoute.Notifications -> NotificationsScreen(
-            notifications = state.notifications.map { notification ->
-                kr.osj.livving.feature.notifications.NotificationUiModel(
-                    id = notification.id,
-                    title = notification.title,
-                    time = formatNotificationTime(notification.createdAt),
-                    desc = notification.body,
-                    tone = when (notification.type) {
-                        LivvingNotificationType.MissedCheckIn -> kr.osj.livving.core.ui.LivvingTone.Red
-                        LivvingNotificationType.GuardianRequest -> kr.osj.livving.core.ui.LivvingTone.Purple
-                        LivvingNotificationType.RelationAccepted -> kr.osj.livving.core.ui.LivvingTone.Green
-                        LivvingNotificationType.Unknown -> kr.osj.livving.core.ui.LivvingTone.Coral
-                    },
-                    read = notification.readAt != null,
-                    opensAlert = notification.type == LivvingNotificationType.MissedCheckIn,
-                )
-            },
-            onNotificationClick = { notification ->
-                onIntent(MainIntent.SelectNotification(notification.id))
-                if (notification.opensAlert) {
-                    onNavigate(MainRoute.Alert)
-                }
-            },
-            onRequestClick = { onNavigate(MainRoute.Request) },
-        )
+        MainRoute.Notifications -> {
+            LaunchedEffect(state.currentUser?.id) {
+                onIntent(MainIntent.LoadNotifications)
+            }
+            NotificationsScreen(
+                pushEnabled = state.pushEnabled,
+                relationPushEnabled = state.relationPushEnabled,
+                missedPushEnabled = state.missedPushEnabled,
+                notifications = state.notifications.map { notification ->
+                    kr.osj.livving.feature.notifications.NotificationUiModel(
+                        id = notification.id,
+                        title = notification.title,
+                        time = formatNotificationTime(notification.createdAt),
+                        desc = notification.body,
+                        tone = when (notification.type) {
+                            LivvingNotificationType.MissedCheckIn -> kr.osj.livving.core.ui.LivvingTone.Red
+                            LivvingNotificationType.GuardianRequest -> kr.osj.livving.core.ui.LivvingTone.Purple
+                            LivvingNotificationType.RelationAccepted -> kr.osj.livving.core.ui.LivvingTone.Green
+                            LivvingNotificationType.Unknown -> kr.osj.livving.core.ui.LivvingTone.Coral
+                        },
+                        read = notification.readAt != null,
+                        opensAlert = notification.type == LivvingNotificationType.MissedCheckIn,
+                    )
+                },
+                onNotificationClick = { notification ->
+                    onIntent(MainIntent.SelectNotification(notification.id))
+                    if (notification.opensAlert) {
+                        onNavigate(MainRoute.Alert)
+                    }
+                },
+            )
+        }
         MainRoute.Alert -> AlertScreen(
-            userName = state.selectedWatchingUser()?.name ?: "보호 대상자",
+            userName = state.selectedWatchingUser()?.name
+                ?: state.selectedNotification()?.title?.substringBefore("님 ")
+                ?: "보호 대상자",
             lastCheckedAt = formatLastCheckedAt(state.selectedWatchingUser()?.lastCheckedAt.orEmpty()).ifBlank { "확인 기록 없음" },
+            message = state.selectedNotification()?.body
+                ?: "설정된 시간까지 안부 확인이 없어요. 가볍게 연락해 확인해 주세요.",
             phoneNumber = state.selectedWatchingUser()?.phoneNumber,
             deadline = state.deadline,
             alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
@@ -552,6 +574,7 @@ private fun MainEntryContent(
             },
         )
         MainRoute.Settings -> SettingsScreen(
+            userName = state.currentUser?.nickname ?: "사용자",
             deadline = state.deadline,
             delayMinutes = state.delayMinutes,
             pushEnabled = state.pushEnabled,
@@ -568,7 +591,10 @@ private fun MainEntryContent(
             onMissedPushToggleClick = { onIntent(MainIntent.ToggleMissedPush) },
             onProfileClick = { onNavigate(MainRoute.Profile) },
             onPrivacyClick = { onNavigate(MainRoute.Privacy) },
-            onLogoutClick = { onReplace(MainRoute.Login) },
+            onLogoutClick = {
+                onIntent(MainIntent.Logout)
+                onReplace(MainRoute.Login)
+            },
         )
         MainRoute.Schedule -> ScheduleScreen(
             deadline = state.deadline,
@@ -658,6 +684,8 @@ private fun MainRoute.activeTab(): String = when (this) {
 private fun MainState.selectedWatchingUser() = watchingUsers.firstOrNull { it.id == selectedWatchingUserId }
     ?: watchingUsers.firstOrNull { it.status == CheckInStatus.Late }
     ?: watchingUsers.firstOrNull()
+
+private fun MainState.selectedNotification() = notifications.firstOrNull { it.id == selectedNotificationId }
 
 private fun formatLastCheckedAt(value: String): String {
     if (value.isBlank()) return ""

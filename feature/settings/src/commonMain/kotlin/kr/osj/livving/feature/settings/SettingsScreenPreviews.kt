@@ -11,6 +11,7 @@ private fun SettingsScreenPreview() {
     LivvingTheme {
         LivvingScrollableScreen {
             SettingsScreen(
+                userName = "오승준",
                 deadline = "08:30",
                 delayMinutes = 5,
                 pushEnabled = true,

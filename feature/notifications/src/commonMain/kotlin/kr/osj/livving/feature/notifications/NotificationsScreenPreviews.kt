@@ -12,6 +12,9 @@ private fun NotificationsScreenPreview() {
     LivvingTheme {
         LivvingScrollableScreen {
             NotificationsScreen(
+                pushEnabled = true,
+                relationPushEnabled = true,
+                missedPushEnabled = true,
                 notifications = listOf(
                     NotificationUiModel(
                         id = "1",
@@ -24,7 +27,6 @@ private fun NotificationsScreenPreview() {
                     ),
                 ),
                 onNotificationClick = {},
-                onRequestClick = {},
                 viewModel = NotificationsViewModel(),
             )
         }
@@ -39,6 +41,7 @@ private fun AlertScreenPreview() {
             AlertScreen(
                 userName = "오승준",
                 lastCheckedAt = "5월 22일 08:10",
+                message = "08:30까지 안부 확인이 없었어요.",
                 phoneNumber = "01012345678",
                 deadline = "08:30",
                 alertAt = "08:35",

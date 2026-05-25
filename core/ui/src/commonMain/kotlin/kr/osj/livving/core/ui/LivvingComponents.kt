@@ -806,6 +806,7 @@ fun LivvingNoticeRow(
     time: String,
     desc: String,
     tone: LivvingTone,
+    read: Boolean = false,
     onClick: () -> Unit,
 ) {
     LivvingCard(
@@ -820,7 +821,21 @@ fun LivvingNoticeRow(
             LivvingAvatar(title, tone = tone)
             Column(Modifier.weight(1f)) {
                 Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Text(title, fontWeight = FontWeight.Black)
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        if (!read) {
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(LivvingCoral),
+                            )
+                        }
+                        Text(title, fontWeight = FontWeight.Black)
+                    }
                     Text(time, color = Color(0xFFA3A3A3), fontSize = 12.sp)
                 }
                 Text(desc, color = LivvingMuted, fontSize = 13.sp)
@@ -880,6 +895,7 @@ fun LivvingSettingRow(
 fun LivvingToggleRow(
     title: String,
     value: Boolean,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     Row(
@@ -892,6 +908,7 @@ fun LivvingToggleRow(
         Text(title, fontWeight = FontWeight.Bold)
         Switch(
             checked = value,
+            enabled = enabled,
             onCheckedChange = { onClick() },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,

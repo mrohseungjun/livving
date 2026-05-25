@@ -58,7 +58,7 @@ fun ProfileScreen(
                 placeholder = "전화번호 입력",
             )
             Spacer(Modifier.height(12.dp))
-            LivvingToggleRow("관계 사용자에게 전화 허용", phoneCallEnabled, onPhoneCallEnabledToggle)
+            LivvingToggleRow("관계 사용자에게 전화 허용", phoneCallEnabled, onClick = onPhoneCallEnabledToggle)
             Spacer(Modifier.height(12.dp))
             LivvingPrimaryButton(
                 text = "전화번호 저장",

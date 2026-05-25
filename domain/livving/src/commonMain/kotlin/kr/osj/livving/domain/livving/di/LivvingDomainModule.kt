@@ -12,6 +12,7 @@ import kr.osj.livving.domain.livving.usecase.GetNotificationsUseCase
 import kr.osj.livving.domain.livving.usecase.GetTodayCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.GetWatchingUsersUseCase
 import kr.osj.livving.domain.livving.usecase.LoginWithKakaoUseCase
+import kr.osj.livving.domain.livving.usecase.LogoutUseCase
 import kr.osj.livving.domain.livving.usecase.MarkNotificationReadUseCase
 import kr.osj.livving.domain.livving.usecase.RegisterPushTokenUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
@@ -30,6 +31,7 @@ val livvingDomainModule = module {
     factory { AcceptGuardianInviteUseCase(get()) }
     factory { DisconnectGuardianUseCase(get()) }
     factory { LoginWithKakaoUseCase(get(), get()) }
+    factory { LogoutUseCase(get()) }
     factory { GetCurrentAuthSessionUseCase(get()) }
     factory { GetTodayCheckInUseCase(get()) }
     factory { SaveInitialUserSettingsUseCase(get()) }

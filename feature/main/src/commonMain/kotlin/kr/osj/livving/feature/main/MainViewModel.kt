@@ -17,6 +17,7 @@ import kr.osj.livving.domain.livving.usecase.GetMyGuardiansUseCase
 import kr.osj.livving.domain.livving.usecase.GetNotificationsUseCase
 import kr.osj.livving.domain.livving.usecase.GetTodayCheckInUseCase
 import kr.osj.livving.domain.livving.usecase.GetWatchingUsersUseCase
+import kr.osj.livving.domain.livving.usecase.LogoutUseCase
 import kr.osj.livving.domain.livving.usecase.MarkNotificationReadUseCase
 import kr.osj.livving.domain.livving.usecase.RegisterPushTokenUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
@@ -44,6 +45,7 @@ class MainViewModel(
     private val registerPushTokenUseCase: RegisterPushTokenUseCase,
     private val getNotificationsUseCase: GetNotificationsUseCase,
     private val markNotificationReadUseCase: MarkNotificationReadUseCase,
+    private val logoutUseCase: LogoutUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MainState())
     val state: StateFlow<MainState> = _state.asStateFlow()
@@ -86,6 +88,7 @@ class MainViewModel(
             MainIntent.TogglePush -> toggleAndSaveSettings { it.copy(pushEnabled = !it.pushEnabled) }
             MainIntent.ToggleRelationPush -> toggleAndSaveSettings { it.copy(relationPushEnabled = !it.relationPushEnabled) }
             MainIntent.ToggleMissedPush -> toggleAndSaveSettings { it.copy(missedPushEnabled = !it.missedPushEnabled) }
+            MainIntent.Logout -> logout()
         }
     }
 
@@ -379,10 +382,23 @@ class MainViewModel(
             runCatching { markNotificationReadUseCase(userId, notificationId) }
             update {
                 it.copy(
+                    selectedNotificationId = notificationId,
                     selectedWatchingUserId = notification?.relatedUserId ?: it.selectedWatchingUserId,
                     notifications = it.notifications.map { item ->
                         if (item.id == notificationId) item.copy(readAt = item.readAt ?: "read") else item
                     },
+                )
+            }
+        }
+    }
+
+    private fun logout() {
+        viewModelScope.launch {
+            runCatching { logoutUseCase() }
+            update {
+                MainState(
+                    sessionChecked = true,
+                    startRoute = MainRoute.Login,
                 )
             }
         }

@@ -26,6 +26,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun AlertScreen(
     userName: String,
     lastCheckedAt: String,
+    message: String,
     phoneNumber: String?,
     deadline: String,
     alertAt: String,
@@ -49,7 +50,7 @@ fun AlertScreen(
                 }
             }
             Spacer(Modifier.height(24.dp))
-            LivvingInfoBox("설정된 시간까지 안부 확인이 없어요. 가볍게 연락해 확인해 주세요.", tone = LivvingTone.Red)
+            LivvingInfoBox(message, tone = LivvingTone.Red)
             Spacer(Modifier.height(16.dp))
             LivvingDataRow("마지막 확인", lastCheckedAt)
             LivvingDataRow("안부 마감", deadline)
