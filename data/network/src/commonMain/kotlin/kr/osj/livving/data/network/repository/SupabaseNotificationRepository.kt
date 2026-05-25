@@ -5,7 +5,6 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import kr.osj.livving.data.network.dto.NotificationEventDto
-import kr.osj.livving.data.network.dto.PushTokenDto
 import kr.osj.livving.domain.livving.LivvingNotification
 import kr.osj.livving.domain.livving.LivvingNotificationType
 import kr.osj.livving.domain.livving.PushTokenRegistration
@@ -16,20 +15,13 @@ class SupabaseNotificationRepository(
 ) : NotificationRepository {
     override suspend fun registerPushToken(userId: String, registration: PushTokenRegistration) {
         client.from("push_tokens")
-            .update(mapOf("enabled" to false)) {
-                filter {
-                    filter("user_id", FilterOperator.EQ, userId)
-                }
-            }
-
-        client.from("push_tokens")
             .upsert(
-                PushTokenDto(
-                    userId = userId,
-                    token = registration.token,
-                    platform = registration.platform,
-                    deviceId = registration.deviceId,
-                    enabled = true,
+                mapOf(
+                    "user_id" to userId,
+                    "token" to registration.token,
+                    "platform" to registration.platform,
+                    "device_id" to registration.deviceId,
+                    "enabled" to true,
                 ),
             ) {
                 onConflict = "token"
