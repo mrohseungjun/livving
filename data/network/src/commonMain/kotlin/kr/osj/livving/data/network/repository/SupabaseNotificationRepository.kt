@@ -46,6 +46,7 @@ class SupabaseNotificationRepository(
                 limit(50)
             }
             .decodeList<NotificationEventDto>()
+            .filter { it.status != "read" }
             .map { it.toDomain() }
     }
 

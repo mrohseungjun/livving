@@ -21,6 +21,7 @@ data class NotificationUiModel(
     val tone: LivvingTone,
     val read: Boolean,
     val opensAlert: Boolean,
+    val opensRequest: Boolean,
 )
 
 @Composable

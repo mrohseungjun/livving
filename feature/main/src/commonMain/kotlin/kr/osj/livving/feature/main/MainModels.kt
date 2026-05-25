@@ -33,6 +33,7 @@ data class MainState(
     val selectedGuardianId: Long? = null,
     val selectedWatchingUserId: String? = null,
     val selectedNotificationId: String? = null,
+    val selectedNotification: LivvingNotification? = null,
     val phoneNumberInput: String = "",
     val phoneCallEnabled: Boolean = false,
     val terms: TermsState = TermsState(),

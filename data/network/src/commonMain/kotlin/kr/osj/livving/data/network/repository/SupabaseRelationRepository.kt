@@ -116,6 +116,35 @@ class SupabaseRelationRepository(
         )
     }
 
+    override suspend fun getInviteRequestByOwner(ownerUserId: String): GuardianInviteRequest? {
+        val invite = client.from("invite_links")
+            .select {
+                filter {
+                    filter("owner_user_id", FilterOperator.EQ, ownerUserId)
+                    filter("status", FilterOperator.EQ, "active")
+                }
+            }
+            .decodeList<InviteRequestDto>()
+            .firstOrNull()
+            ?: return null
+
+        val owner = client.from("profiles")
+            .select {
+                filter {
+                    filter("id", FilterOperator.EQ, invite.ownerUserId)
+                }
+            }
+            .decodeList<ProfileDto>()
+            .firstOrNull()
+            ?: return null
+
+        return GuardianInviteRequest(
+            inviteCode = invite.inviteCode,
+            ownerUserId = invite.ownerUserId,
+            ownerName = owner.nickname,
+        )
+    }
+
     override suspend fun acceptGuardianInvite(inviteCode: String, guardianUserId: String): Guardian {
         val invite = client.from("invite_links")
             .select {

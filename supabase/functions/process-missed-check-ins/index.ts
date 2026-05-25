@@ -130,8 +130,16 @@ async function sendFcmMessage(
           },
         },
         apns: {
+          headers: {
+            "apns-priority": "10",
+            "apns-push-type": "alert",
+          },
           payload: {
             aps: {
+              alert: {
+                title: message.title,
+                body: message.body,
+              },
               sound: "default",
             },
           },

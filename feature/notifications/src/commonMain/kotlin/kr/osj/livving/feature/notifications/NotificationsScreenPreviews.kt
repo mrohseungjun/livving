@@ -24,6 +24,7 @@ private fun NotificationsScreenPreview() {
                         tone = LivvingTone.Red,
                         read = false,
                         opensAlert = true,
+                        opensRequest = false,
                     ),
                 ),
                 onNotificationClick = {},

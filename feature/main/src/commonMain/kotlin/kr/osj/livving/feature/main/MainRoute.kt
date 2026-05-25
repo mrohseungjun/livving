@@ -535,22 +535,24 @@ private fun MainEntryContent(
                         },
                         read = notification.readAt != null,
                         opensAlert = notification.type == LivvingNotificationType.MissedCheckIn,
+                        opensRequest = notification.type == LivvingNotificationType.GuardianRequest,
                     )
                 },
                 onNotificationClick = { notification ->
                     onIntent(MainIntent.SelectNotification(notification.id))
-                    if (notification.opensAlert) {
-                        onNavigate(MainRoute.Alert)
+                    when {
+                        notification.opensAlert -> onNavigate(MainRoute.Alert)
+                        notification.opensRequest -> onNavigate(MainRoute.Request)
                     }
                 },
             )
         }
         MainRoute.Alert -> AlertScreen(
             userName = state.selectedWatchingUser()?.name
-                ?: state.selectedNotification()?.title?.substringBefore("님 ")
+                ?: state.selectedNotification?.title?.substringBefore("님 ")
                 ?: "보호 대상자",
             lastCheckedAt = formatLastCheckedAt(state.selectedWatchingUser()?.lastCheckedAt.orEmpty()).ifBlank { "확인 기록 없음" },
-            message = state.selectedNotification()?.body
+            message = state.selectedNotification?.body
                 ?: "설정된 시간까지 안부 확인이 없어요. 가볍게 연락해 확인해 주세요.",
             phoneNumber = state.selectedWatchingUser()?.phoneNumber,
             deadline = state.deadline,
@@ -684,8 +686,6 @@ private fun MainRoute.activeTab(): String = when (this) {
 private fun MainState.selectedWatchingUser() = watchingUsers.firstOrNull { it.id == selectedWatchingUserId }
     ?: watchingUsers.firstOrNull { it.status == CheckInStatus.Late }
     ?: watchingUsers.firstOrNull()
-
-private fun MainState.selectedNotification() = notifications.firstOrNull { it.id == selectedNotificationId }
 
 private fun formatLastCheckedAt(value: String): String {
     if (value.isBlank()) return ""

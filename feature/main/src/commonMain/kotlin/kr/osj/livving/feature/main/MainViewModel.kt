@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kr.osj.livving.domain.livving.CheckInStatus
 import kr.osj.livving.domain.livving.InitialUserSettings
+import kr.osj.livving.domain.livving.LivvingNotificationType
 import kr.osj.livving.domain.livving.PushTokenRegistration
 import kr.osj.livving.domain.livving.WatchingUser
 import kr.osj.livving.domain.livving.usecase.AcceptGuardianInviteUseCase
@@ -12,6 +13,7 @@ import kr.osj.livving.domain.livving.usecase.CreateGuardianInviteUseCase
 import kr.osj.livving.domain.livving.usecase.DisconnectGuardianUseCase
 import kr.osj.livving.domain.livving.usecase.GetActiveInviteLinksUseCase
 import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
+import kr.osj.livving.domain.livving.usecase.GetGuardianInviteRequestByOwnerUseCase
 import kr.osj.livving.domain.livving.usecase.GetGuardianInviteRequestUseCase
 import kr.osj.livving.domain.livving.usecase.GetMyGuardiansUseCase
 import kr.osj.livving.domain.livving.usecase.GetNotificationsUseCase
@@ -35,6 +37,7 @@ class MainViewModel(
     private val getMyGuardiansUseCase: GetMyGuardiansUseCase,
     private val getActiveInviteLinksUseCase: GetActiveInviteLinksUseCase,
     private val getGuardianInviteRequestUseCase: GetGuardianInviteRequestUseCase,
+    private val getGuardianInviteRequestByOwnerUseCase: GetGuardianInviteRequestByOwnerUseCase,
     private val acceptGuardianInviteUseCase: AcceptGuardianInviteUseCase,
     private val disconnectGuardianUseCase: DisconnectGuardianUseCase,
     private val getWatchingUsersUseCase: GetWatchingUsersUseCase,
@@ -383,11 +386,21 @@ class MainViewModel(
             update {
                 it.copy(
                     selectedNotificationId = notificationId,
+                    selectedNotification = notification,
                     selectedWatchingUserId = notification?.relatedUserId ?: it.selectedWatchingUserId,
-                    notifications = it.notifications.map { item ->
-                        if (item.id == notificationId) item.copy(readAt = item.readAt ?: "read") else item
-                    },
+                    notifications = it.notifications.filterNot { item -> item.id == notificationId },
                 )
+            }
+            if (notification?.type == LivvingNotificationType.GuardianRequest) {
+                val ownerUserId = notification.relatedUserId ?: notification.actorUserId
+                val inviteRequest = ownerUserId
+                    ?.let { runCatching { getGuardianInviteRequestByOwnerUseCase(it) }.getOrNull() }
+                update {
+                    it.copy(
+                        inviteRequest = inviteRequest,
+                        pendingInviteCode = inviteRequest?.inviteCode ?: it.pendingInviteCode,
+                    )
+                }
             }
         }
     }

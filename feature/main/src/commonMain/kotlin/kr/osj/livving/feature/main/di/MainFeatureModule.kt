@@ -30,6 +30,7 @@ val mainFeatureModule = module {
             getMyGuardiansUseCase = get(),
             getActiveInviteLinksUseCase = get(),
             getGuardianInviteRequestUseCase = get(),
+            getGuardianInviteRequestByOwnerUseCase = get(),
             acceptGuardianInviteUseCase = get(),
             disconnectGuardianUseCase = get(),
             getWatchingUsersUseCase = get(),

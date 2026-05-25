@@ -34,6 +34,7 @@ class CreateGuardianInviteUseCaseTest {
         }
 
         override suspend fun getInviteRequest(inviteCode: String): GuardianInviteRequest? = null
+        override suspend fun getInviteRequestByOwner(ownerUserId: String): GuardianInviteRequest? = null
 
         override suspend fun acceptGuardianInvite(inviteCode: String, guardianUserId: String): Guardian {
             return Guardian(

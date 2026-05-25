@@ -6,6 +6,7 @@ import kr.osj.livving.domain.livving.usecase.CreateGuardianInviteUseCase
 import kr.osj.livving.domain.livving.usecase.DisconnectGuardianUseCase
 import kr.osj.livving.domain.livving.usecase.GetActiveInviteLinksUseCase
 import kr.osj.livving.domain.livving.usecase.GetCurrentAuthSessionUseCase
+import kr.osj.livving.domain.livving.usecase.GetGuardianInviteRequestByOwnerUseCase
 import kr.osj.livving.domain.livving.usecase.GetGuardianInviteRequestUseCase
 import kr.osj.livving.domain.livving.usecase.GetMyGuardiansUseCase
 import kr.osj.livving.domain.livving.usecase.GetNotificationsUseCase
@@ -28,6 +29,7 @@ val livvingDomainModule = module {
     factory { GetWatchingUsersUseCase(get()) }
     factory { GetActiveInviteLinksUseCase(get()) }
     factory { GetGuardianInviteRequestUseCase(get()) }
+    factory { GetGuardianInviteRequestByOwnerUseCase(get()) }
     factory { AcceptGuardianInviteUseCase(get()) }
     factory { DisconnectGuardianUseCase(get()) }
     factory { LoginWithKakaoUseCase(get(), get()) }
