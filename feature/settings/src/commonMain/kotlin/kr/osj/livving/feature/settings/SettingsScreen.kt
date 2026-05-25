@@ -3,6 +3,7 @@ package kr.osj.livving.feature.settings
 import androidx.compose.runtime.Composable
 import kr.osj.livving.core.ui.LivvingHeader
 import kr.osj.livving.core.ui.LivvingInfoBox
+import kr.osj.livving.core.ui.LivvingPrimaryButton
 import kr.osj.livving.core.ui.LivvingSettingGroup
 import kr.osj.livving.core.ui.LivvingSettingRow
 import kr.osj.livving.core.ui.LivvingToggleRow
@@ -18,12 +19,15 @@ fun SettingsScreen(
     pushEnabled: Boolean,
     relationPushEnabled: Boolean,
     missedPushEnabled: Boolean,
+    testNotificationSending: Boolean,
+    testNotificationMessage: String?,
     onDeadlineClick: () -> Unit,
     onDelayClick: () -> Unit,
     onScheduleClick: () -> Unit,
     onPushToggleClick: () -> Unit,
     onRelationPushToggleClick: () -> Unit,
     onMissedPushToggleClick: () -> Unit,
+    onSendTestNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
     onPrivacyClick: () -> Unit,
     onLogoutClick: () -> Unit,
@@ -46,6 +50,19 @@ fun SettingsScreen(
             LivvingInfoBox(
                 text = "푸시 알림이 꺼져 있으면 보호자 요청과 안부 미확인 알림을 받을 수 없어요.",
                 tone = LivvingTone.Orange,
+            )
+        }
+    }
+    LivvingSettingGroup("알림 테스트") {
+        LivvingPrimaryButton(
+            text = if (testNotificationSending) "전송 중..." else "테스트 알림 보내기",
+            enabled = pushEnabled && !testNotificationSending,
+            onClick = onSendTestNotificationClick,
+        )
+        if (testNotificationMessage != null) {
+            LivvingInfoBox(
+                text = testNotificationMessage,
+                tone = LivvingTone.Neutral,
             )
         }
     }

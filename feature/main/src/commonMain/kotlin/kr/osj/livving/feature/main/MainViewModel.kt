@@ -24,6 +24,7 @@ import kr.osj.livving.domain.livving.usecase.MarkNotificationReadUseCase
 import kr.osj.livving.domain.livving.usecase.RegisterPushTokenUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
 import kr.osj.livving.domain.livving.usecase.SavePhoneContactUseCase
+import kr.osj.livving.domain.livving.usecase.SendTestNotificationUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +49,7 @@ class MainViewModel(
     private val registerPushTokenUseCase: RegisterPushTokenUseCase,
     private val getNotificationsUseCase: GetNotificationsUseCase,
     private val markNotificationReadUseCase: MarkNotificationReadUseCase,
+    private val sendTestNotificationUseCase: SendTestNotificationUseCase,
     private val logoutUseCase: LogoutUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MainState())
@@ -91,6 +93,7 @@ class MainViewModel(
             MainIntent.TogglePush -> toggleAndSaveSettings { it.copy(pushEnabled = !it.pushEnabled) }
             MainIntent.ToggleRelationPush -> toggleAndSaveSettings { it.copy(relationPushEnabled = !it.relationPushEnabled) }
             MainIntent.ToggleMissedPush -> toggleAndSaveSettings { it.copy(missedPushEnabled = !it.missedPushEnabled) }
+            MainIntent.SendTestNotification -> sendTestNotification()
             MainIntent.Logout -> logout()
         }
     }
@@ -374,6 +377,39 @@ class MainViewModel(
             val userId = _state.value.currentUser?.id ?: return@launch
             val notifications = runCatching { getNotificationsUseCase(userId) }.getOrNull().orEmpty()
             update { it.copy(notifications = notifications) }
+        }
+    }
+
+    private fun sendTestNotification() {
+        viewModelScope.launch {
+            val userId = _state.value.currentUser?.id ?: return@launch
+            update {
+                it.copy(
+                    testNotificationSending = true,
+                    testNotificationMessage = null,
+                )
+            }
+            runCatching { sendTestNotificationUseCase(userId) }
+                .onSuccess { result ->
+                    update {
+                        it.copy(
+                            testNotificationSending = false,
+                            testNotificationMessage = when {
+                                result.tokenCount == 0 -> "등록된 푸시 토큰이 없어요. 알림 권한과 FCM 토큰 저장을 확인해 주세요."
+                                result.failedCount == 0 -> "테스트 알림을 ${result.sentCount}개 기기에 보냈어요."
+                                else -> "테스트 알림 ${result.sentCount}개 성공, ${result.failedCount}개 실패했어요."
+                            },
+                        )
+                    }
+                }
+                .onFailure {
+                    update {
+                        it.copy(
+                            testNotificationSending = false,
+                            testNotificationMessage = "테스트 알림 전송에 실패했어요.",
+                        )
+                    }
+                }
         }
     }
 

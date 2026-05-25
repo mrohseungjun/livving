@@ -41,6 +41,12 @@ data class PushTokenRegistration(
     val deviceId: String? = null,
 )
 
+data class TestNotificationResult(
+    val tokenCount: Int,
+    val sentCount: Int,
+    val failedCount: Int,
+)
+
 data class LivvingNotification(
     val id: String,
     val type: LivvingNotificationType,

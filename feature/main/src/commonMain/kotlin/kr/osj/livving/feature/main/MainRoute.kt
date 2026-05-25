@@ -10,6 +10,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kr.osj.livving.core.ui.LivvingBottomBar
+import kr.osj.livving.core.ui.LivvingPrimaryButton
 import kr.osj.livving.core.ui.LivvingScrollableScreen
 import kr.osj.livving.core.ui.addLivvingMinutes
 import kr.osj.livving.domain.livving.CheckInStatus
@@ -263,7 +264,9 @@ private fun MainEntry(
         )
         else -> MainEntryContainer(
             route = route,
+            state = state,
             onReplace = onReplace,
+            onNavigate = onNavigate,
         ) {
             MainEntryContent(
                 route = route,
@@ -285,7 +288,9 @@ private fun MainEntry(
 @Composable
 private fun MainEntryContainer(
     route: MainRoute,
+    state: MainState,
     onReplace: (MainRoute) -> Unit,
+    onNavigate: (MainRoute) -> Unit,
     content: @Composable () -> Unit,
 ) {
     LivvingScrollableScreen(
@@ -309,6 +314,16 @@ private fun MainEntryContainer(
                             },
                         )
                     },
+                )
+            }
+        } else {
+            null
+        },
+        bottomAction = if (route == MainRoute.Relations && state.relationTab == RelationsTab.MyGuardians) {
+            {
+                LivvingPrimaryButton(
+                    text = "보호자 초대하기",
+                    onClick = { onNavigate(MainRoute.Invite) },
                 )
             }
         } else {
@@ -452,7 +467,6 @@ private fun MainEntryContent(
                         },
                     )
                 },
-                onInviteClick = { onNavigate(MainRoute.Invite) },
                 onManualInviteCodeChange = { onIntent(MainIntent.ChangeManualInviteCode(it)) },
                 onManualInviteSubmit = { onIntent(MainIntent.SubmitManualInviteCode) },
                 onWatchingUserClick = { user ->
@@ -582,6 +596,8 @@ private fun MainEntryContent(
             pushEnabled = state.pushEnabled,
             relationPushEnabled = state.relationPushEnabled,
             missedPushEnabled = state.missedPushEnabled,
+            testNotificationSending = state.testNotificationSending,
+            testNotificationMessage = state.testNotificationMessage,
             onDeadlineClick = {
                 onIntent(MainIntent.SelectDeadline(state.deadline))
                 onNavigate(MainRoute.DeadlineChange)
@@ -591,6 +607,7 @@ private fun MainEntryContent(
             onPushToggleClick = { onIntent(MainIntent.TogglePush) },
             onRelationPushToggleClick = { onIntent(MainIntent.ToggleRelationPush) },
             onMissedPushToggleClick = { onIntent(MainIntent.ToggleMissedPush) },
+            onSendTestNotificationClick = { onIntent(MainIntent.SendTestNotification) },
             onProfileClick = { onNavigate(MainRoute.Profile) },
             onPrivacyClick = { onNavigate(MainRoute.Privacy) },
             onLogoutClick = {

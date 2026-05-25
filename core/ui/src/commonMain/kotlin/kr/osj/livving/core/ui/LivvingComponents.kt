@@ -88,8 +88,15 @@ fun LivvingScreen(content: @Composable BoxScope.() -> Unit) {
 @Composable
 fun LivvingScrollableScreen(
     bottomBar: (@Composable () -> Unit)? = null,
+    bottomAction: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
+    val bottomPadding = when {
+        bottomBar != null && bottomAction != null -> 164.dp
+        bottomBar != null -> 88.dp
+        bottomAction != null -> 104.dp
+        else -> 24.dp
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -103,19 +110,30 @@ fun LivvingScrollableScreen(
                     start = 24.dp,
                     top = 20.dp,
                     end = 24.dp,
-                    bottom = if (bottomBar == null) 24.dp else 88.dp,
+                    bottom = bottomPadding,
                 )
                 .verticalScroll(rememberScrollState()),
         ) {
             content()
         }
-        if (bottomBar != null) {
-            Box(
+        if (bottomBar != null || bottomAction != null) {
+            Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth(),
             ) {
-                bottomBar()
+                if (bottomAction != null) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = LivvingBackground,
+                        tonalElevation = 0.dp,
+                    ) {
+                        Box(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)) {
+                            bottomAction()
+                        }
+                    }
+                }
+                bottomBar?.invoke()
             }
         }
     }

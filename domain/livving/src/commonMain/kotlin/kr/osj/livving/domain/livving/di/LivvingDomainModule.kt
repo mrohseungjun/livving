@@ -18,6 +18,7 @@ import kr.osj.livving.domain.livving.usecase.MarkNotificationReadUseCase
 import kr.osj.livving.domain.livving.usecase.RegisterPushTokenUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
 import kr.osj.livving.domain.livving.usecase.SavePhoneContactUseCase
+import kr.osj.livving.domain.livving.usecase.SendTestNotificationUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
 import org.koin.dsl.module
 
@@ -41,4 +42,5 @@ val livvingDomainModule = module {
     factory { RegisterPushTokenUseCase(get()) }
     factory { GetNotificationsUseCase(get()) }
     factory { MarkNotificationReadUseCase(get()) }
+    factory { SendTestNotificationUseCase(get()) }
 }

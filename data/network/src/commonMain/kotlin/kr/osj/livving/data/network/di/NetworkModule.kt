@@ -38,6 +38,6 @@ val networkModule = module {
     single<AuthRepository> { SupabaseAuthRepository(get()) }
     single<RelationRepository> { SupabaseRelationRepository(get()) }
     single<CheckInRepository> { SupabaseCheckInRepository(get()) }
-    single<NotificationRepository> { SupabaseNotificationRepository(get()) }
+    single<NotificationRepository> { SupabaseNotificationRepository(get(), get(), get()) }
     single<LivvingApi> { provideLivvingApi(get()) }
 }

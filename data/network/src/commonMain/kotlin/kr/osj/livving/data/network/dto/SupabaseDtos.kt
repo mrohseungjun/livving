@@ -28,6 +28,13 @@ data class PushTokenDto(
 )
 
 @Serializable
+data class TestNotificationResultDto(
+    @SerialName("token_count") val tokenCount: Int = 0,
+    @SerialName("sent_count") val sentCount: Int = 0,
+    @SerialName("failed_count") val failedCount: Int = 0,
+)
+
+@Serializable
 data class NotificationEventDto(
     val id: String,
     @SerialName("recipient_user_id") val recipientUserId: String,

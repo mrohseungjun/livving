@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,7 +48,6 @@ fun RelationsScreen(
     onMyGuardiansClick: () -> Unit,
     onWatchingClick: () -> Unit,
     onGuardianClick: (RelationGuardianUiModel) -> Unit,
-    onInviteClick: () -> Unit,
     onManualInviteCodeChange: (String) -> Unit,
     onManualInviteSubmit: () -> Unit,
     onWatchingUserClick: (WatchingUserUiModel) -> Unit,
@@ -63,21 +66,26 @@ fun RelationsScreen(
         onRight = onWatchingClick,
     )
     Spacer(Modifier.height(24.dp))
-    if (selectedTab == RelationsTab.MyGuardians) {
-        guardians.forEachIndexed { index, guardian ->
-            GuardianRow(
-                guardian = guardian,
-                tone = listOf(LivvingTone.Coral, LivvingTone.Green, LivvingTone.Orange).getOrElse(index) { LivvingTone.Purple },
-                onClick = { onGuardianClick(guardian) },
-            )
-            Spacer(Modifier.height(14.dp))
+    var searchQuery by remember(selectedTab) { mutableStateOf("") }
+    val normalizedQuery = searchQuery.trim()
+    val filteredGuardians = remember(guardians, normalizedQuery) {
+        guardians.filter { guardian ->
+            normalizedQuery.isBlank() ||
+                guardian.name.contains(normalizedQuery, ignoreCase = true) ||
+                guardian.relation.contains(normalizedQuery, ignoreCase = true) ||
+                guardian.status.label.contains(normalizedQuery, ignoreCase = true)
         }
-        Spacer(Modifier.height(12.dp))
-        LivvingPrimaryButton(
-            text = "보호자 초대하기",
-            onClick = onInviteClick,
-        )
-        Spacer(Modifier.height(14.dp))
+    }
+    val filteredWatchingUsers = remember(watchingUsers, normalizedQuery) {
+        watchingUsers.filter { user ->
+            normalizedQuery.isBlank() ||
+                user.name.contains(normalizedQuery, ignoreCase = true) ||
+                user.text.contains(normalizedQuery, ignoreCase = true) ||
+                user.sub.contains(normalizedQuery, ignoreCase = true)
+        }
+    }
+
+    if (selectedTab == RelationsTab.MyGuardians) {
         LivvingInfoBox(
             text = "보호자 그룹 링크를 한 번 공유하고, 각 보호자가 앱에서 수락하면 연결됩니다.",
             tone = LivvingTone.Neutral,
@@ -89,8 +97,37 @@ fun RelationsScreen(
             onValueChange = onManualInviteCodeChange,
             onSubmit = onManualInviteSubmit,
         )
+        Spacer(Modifier.height(18.dp))
+        RelationSearchField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = "이름, 관계, 상태 검색",
+            resultCount = filteredGuardians.size,
+        )
+        Spacer(Modifier.height(14.dp))
+        if (filteredGuardians.isEmpty()) {
+            EmptySearchResult()
+        }
+        filteredGuardians.forEachIndexed { index, guardian ->
+            GuardianRow(
+                guardian = guardian,
+                tone = listOf(LivvingTone.Coral, LivvingTone.Green, LivvingTone.Orange).getOrElse(index) { LivvingTone.Purple },
+                onClick = { onGuardianClick(guardian) },
+            )
+            Spacer(Modifier.height(14.dp))
+        }
     } else {
-        watchingUsers.forEach { user ->
+        RelationSearchField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = "이름, 안부 상태 검색",
+            resultCount = filteredWatchingUsers.size,
+        )
+        Spacer(Modifier.height(14.dp))
+        if (filteredWatchingUsers.isEmpty()) {
+            EmptySearchResult()
+        }
+        filteredWatchingUsers.forEach { user ->
             WatchingRow(
                 user = user,
                 deadline = deadline,
@@ -101,6 +138,41 @@ fun RelationsScreen(
             Spacer(Modifier.height(14.dp))
         }
     }
+}
+
+@Composable
+private fun RelationSearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    resultCount: Int,
+) {
+    LivvingTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = placeholder,
+    )
+    Spacer(Modifier.height(8.dp))
+    Text(
+        text = "검색 결과 ${resultCount}명",
+        color = LivvingMuted,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold,
+    )
+}
+
+@Composable
+private fun EmptySearchResult() {
+    LivvingCard(Modifier.fillMaxWidth()) {
+        Text(
+            text = "검색 결과가 없어요",
+            modifier = Modifier.padding(18.dp),
+            color = LivvingMuted,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+    Spacer(Modifier.height(14.dp))
 }
 
 @Composable
@@ -134,6 +206,12 @@ private fun ManualInviteCodeCard(
         }
     }
 }
+
+private val RelationGuardianStatus.label: String
+    get() = when (this) {
+        RelationGuardianStatus.Accepted -> "연결됨"
+        RelationGuardianStatus.Pending -> "초대 대기"
+    }
 
 @Composable
 private fun GuardianRow(

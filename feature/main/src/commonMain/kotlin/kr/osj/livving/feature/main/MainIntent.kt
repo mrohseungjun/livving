@@ -30,5 +30,6 @@ sealed interface MainIntent {
     data object TogglePush : MainIntent
     data object ToggleRelationPush : MainIntent
     data object ToggleMissedPush : MainIntent
+    data object SendTestNotification : MainIntent
     data object Logout : MainIntent
 }
