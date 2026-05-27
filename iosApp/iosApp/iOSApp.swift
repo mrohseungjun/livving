@@ -40,7 +40,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        Messaging.messaging().apnsToken = deviceToken
+        Messaging.messaging().setAPNSToken(deviceToken, type: apnsTokenType())
         let tokenPrefix = deviceToken.map { String(format: "%02.2hhx", $0) }.joined().prefix(12)
         print("LivvingPushToken iOS APNs token registered prefix=\(tokenPrefix)")
         FirebasePushTokenClientBridge.shared.markApnsTokenReady()
@@ -91,5 +91,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                 application.registerForRemoteNotifications()
             }
         }
+    }
+
+    private func apnsTokenType() -> MessagingAPNSTokenType {
+        #if DEBUG
+        return .sandbox
+        #else
+        return .prod
+        #endif
     }
 }

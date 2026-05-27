@@ -14,12 +14,17 @@ final class FirebasePushTokenClientBridge: NSObject, IosPushTokenProvider {
         cachedToken = token
         guard let token, !token.isEmpty else { return }
         print("LivvingPushToken iOS FCM token received prefix=\(token.prefix(12))")
+        guard apnsTokenReady else {
+            print("LivvingPushToken iOS FCM token received before APNs token; waiting for APNs association")
+            return
+        }
         completePending(with: platformToken(token), error: nil)
     }
 
     func markApnsTokenReady() {
         apnsTokenReady = true
         tokenUnavailableReason = nil
+        cachedToken = nil
         print("LivvingPushToken iOS APNs token ready")
         resolvePendingCompletions()
     }

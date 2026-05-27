@@ -63,13 +63,14 @@ Deno.serve(async (request) => {
 
   const serviceAccount = JSON.parse(serviceAccountJson) as ServiceAccount;
   const projectId = Deno.env.get("FCM_PROJECT_ID") || serviceAccount.project_id;
+  const iosBundleId = Deno.env.get("IOS_BUNDLE_ID") || "kr.osj.livving";
   if (!projectId) {
     return jsonResponse({ error: "missing FCM project id" }, 500);
   }
 
   const accessToken = await createGoogleAccessToken(serviceAccount);
   const results = await Promise.all(
-    pushTokens.map((pushToken) => sendFcmMessage(projectId, accessToken, pushToken)),
+    pushTokens.map((pushToken) => sendFcmMessage(projectId, accessToken, iosBundleId, pushToken)),
   );
   const sentCount = results.filter((result) => result.ok).length;
   const failedCount = results.length - sentCount;
@@ -106,6 +107,12 @@ Deno.serve(async (request) => {
     sent_count: sentCount,
     failed_count: failedCount,
     disabled_token_count: invalidTokenIds.length,
+    results: results.map((result) => ({
+      platform: result.platform,
+      ok: result.ok,
+      token_id: result.tokenId,
+      error: result.ok ? null : result.error,
+    })),
     first_error: results.find((result) => !result.ok)?.error ?? null,
   });
 });
@@ -159,8 +166,9 @@ async function getUserByAccessToken(
 async function sendFcmMessage(
   projectId: string,
   accessToken: string,
+  iosBundleId: string,
   pushToken: PushToken,
-): Promise<{ ok: boolean; tokenId: number; error?: string }> {
+): Promise<{ ok: boolean; tokenId: number; platform: PushToken["platform"]; error?: string }> {
   const response = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: "POST",
     headers: {
@@ -188,6 +196,7 @@ async function sendFcmMessage(
           headers: {
             "apns-priority": "10",
             "apns-push-type": "alert",
+            "apns-topic": iosBundleId,
           },
           payload: {
             aps: {
@@ -203,8 +212,8 @@ async function sendFcmMessage(
     }),
   });
 
-  if (response.ok) return { ok: true, tokenId: pushToken.id };
-  return { ok: false, tokenId: pushToken.id, error: await response.text() };
+  if (response.ok) return { ok: true, tokenId: pushToken.id, platform: pushToken.platform };
+  return { ok: false, tokenId: pushToken.id, platform: pushToken.platform, error: await response.text() };
 }
 
 function isInvalidFcmTokenError(error: string): boolean {

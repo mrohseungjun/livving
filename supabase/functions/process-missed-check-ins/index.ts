@@ -42,6 +42,7 @@ Deno.serve(async (request) => {
 
   const serviceAccount = JSON.parse(serviceAccountJson) as ServiceAccount;
   const projectId = Deno.env.get("FCM_PROJECT_ID") || serviceAccount.project_id;
+  const iosBundleId = Deno.env.get("IOS_BUNDLE_ID") || "kr.osj.livving";
   if (!projectId) {
     return new Response(JSON.stringify({ error: "missing FCM project id" }), {
       status: 500,
@@ -65,7 +66,7 @@ Deno.serve(async (request) => {
   const invalidTokenIds = new Set<number>();
 
   for (const message of messages) {
-    const result = await sendFcmMessage(projectId, accessToken, message);
+    const result = await sendFcmMessage(projectId, accessToken, iosBundleId, message);
     if (result.ok) {
       sentEventIds.add(message.event_id);
     } else if (!sentEventIds.has(message.event_id)) {
@@ -115,6 +116,7 @@ function getSupabaseSecretKey(): string | undefined {
 async function sendFcmMessage(
   projectId: string,
   accessToken: string,
+  iosBundleId: string,
   message: PendingMessage,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const response = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
@@ -145,6 +147,7 @@ async function sendFcmMessage(
           headers: {
             "apns-priority": "10",
             "apns-push-type": "alert",
+            "apns-topic": iosBundleId,
           },
           payload: {
             aps: {
