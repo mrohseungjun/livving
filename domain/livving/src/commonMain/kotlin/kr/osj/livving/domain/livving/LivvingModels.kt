@@ -75,5 +75,6 @@ enum class LivvingNotificationType {
     MissedCheckIn,
     GuardianRequest,
     RelationAccepted,
+    TestPush,
     Unknown,
 }

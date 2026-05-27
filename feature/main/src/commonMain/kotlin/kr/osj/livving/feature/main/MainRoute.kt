@@ -571,6 +571,7 @@ private fun MainEntryContent(
                             LivvingNotificationType.MissedCheckIn -> kr.osj.livving.core.ui.LivvingTone.Red
                             LivvingNotificationType.GuardianRequest -> kr.osj.livving.core.ui.LivvingTone.Purple
                             LivvingNotificationType.RelationAccepted -> kr.osj.livving.core.ui.LivvingTone.Green
+                            LivvingNotificationType.TestPush -> kr.osj.livving.core.ui.LivvingTone.Coral
                             LivvingNotificationType.Unknown -> kr.osj.livving.core.ui.LivvingTone.Coral
                         },
                         read = notification.readAt != null,

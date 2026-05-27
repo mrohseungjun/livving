@@ -7,13 +7,15 @@ import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.expectSuccess
-import io.ktor.client.request.header
+import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.url
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
 import kr.osj.livving.core.platform.livvingLogD
 import kr.osj.livving.data.network.NetworkConfig
 import kr.osj.livving.data.network.dto.NotificationEventDto
+import kr.osj.livving.data.network.dto.PushTokenDto
 import kr.osj.livving.data.network.dto.TestNotificationResultDto
 import kr.osj.livving.domain.livving.LivvingNotification
 import kr.osj.livving.domain.livving.LivvingNotificationType
@@ -32,12 +34,12 @@ class SupabaseNotificationRepository(
     override suspend fun registerPushToken(userId: String, registration: PushTokenRegistration) {
         client.from("push_tokens")
             .upsert(
-                mapOf(
-                    "user_id" to userId,
-                    "token" to registration.token,
-                    "platform" to registration.platform,
-                    "device_id" to registration.deviceId,
-                    "enabled" to true,
+                PushTokenDto(
+                    userId = userId,
+                    token = registration.token,
+                    platform = registration.platform,
+                    deviceId = registration.deviceId,
+                    enabled = true,
                 ),
             ) {
                 onConflict = "token"
@@ -92,13 +94,18 @@ class SupabaseNotificationRepository(
             ?: error("Supabase session is required to send a test notification")
         livvingLogD(
             tag = "LivvingPushTest",
-            message = "request userId=$userId url=${config.supabaseClientUrl}/functions/v1/send-test-notification",
+            message = "request userId=$userId url=${config.supabaseClientUrl}/functions/v1/send-test-notification " +
+                "accessTokenPrefix=${accessToken.take(12)} jwtParts=${accessToken.count { it == '.' } + 1}",
         )
         val response = httpClient.post {
             expectSuccess = false
             url("${config.supabaseClientUrl}/functions/v1/send-test-notification")
-            header("Authorization", "Bearer $accessToken")
-            header("apikey", config.supabaseAnonKey)
+            headers {
+                remove(HttpHeaders.Authorization)
+                append(HttpHeaders.Authorization, "Bearer $accessToken")
+                remove("apikey")
+                append("apikey", config.supabaseAnonKey)
+            }
         }
         val rawBody = response.bodyAsText()
         livvingLogD(
@@ -125,6 +132,7 @@ class SupabaseNotificationRepository(
                 "missed_check_in" -> LivvingNotificationType.MissedCheckIn
                 "guardian_request" -> LivvingNotificationType.GuardianRequest
                 "relation_accepted" -> LivvingNotificationType.RelationAccepted
+                "test_push" -> LivvingNotificationType.TestPush
                 else -> LivvingNotificationType.Unknown
             },
             title = title,

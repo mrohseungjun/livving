@@ -12,6 +12,10 @@ type ServiceAccount = {
   project_id?: string;
 };
 
+type AuthUser = {
+  id?: string;
+};
+
 const jsonHeaders = { "content-type": "application/json" };
 
 Deno.serve(async (request) => {
@@ -21,27 +25,32 @@ Deno.serve(async (request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = getSupabaseSecretKey();
+  const authKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
   const serviceAccountJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
-  if (!supabaseUrl || !serviceKey || !serviceAccountJson) {
+  if (!supabaseUrl || !serviceKey || !authKey || !serviceAccountJson) {
     return jsonResponse({ error: "missing server configuration" }, 500);
   }
 
   const authorization = request.headers.get("authorization") ?? "";
-  const userAccessToken = authorization.replace(/^Bearer\s+/i, "").trim();
+  const userAccessToken = extractUserBearerToken(authorization);
   if (!userAccessToken) {
     return jsonResponse({ error: "missing authorization" }, 401);
   }
 
-  const supabase = createClient(supabaseUrl, serviceKey);
-  const { data: userData, error: userError } = await supabase.auth.getUser(userAccessToken);
-  if (userError || !userData.user) {
-    return jsonResponse({ error: "invalid authorization" }, 401);
+  const userResult = await getUserByAccessToken(supabaseUrl, authKey, userAccessToken);
+  if (userResult instanceof Response) {
+    return userResult;
+  }
+  const user = userResult;
+  if (!user.id) {
+    return jsonResponse({ error: "invalid authorization", detail: "user id is missing" }, 401);
   }
 
+  const supabase = createClient(supabaseUrl, serviceKey);
   const { data: tokens, error: tokenError } = await supabase
     .from("push_tokens")
     .select("id, token, platform")
-    .eq("user_id", userData.user.id)
+    .eq("user_id", user.id)
     .eq("enabled", true);
   if (tokenError) {
     return jsonResponse({ error: tokenError.message }, 500);
@@ -75,6 +84,21 @@ Deno.serve(async (request) => {
       .in("id", invalidTokenIds);
   }
 
+  if (sentCount > 0) {
+    await supabase
+      .from("notification_events")
+      .insert({
+        recipient_user_id: user.id,
+        actor_user_id: user.id,
+        event_type: "test_push",
+        title: "livving 테스트 알림",
+        body: `테스트 알림을 ${sentCount}개 기기에 보냈어요.`,
+        related_user_id: user.id,
+        status: "sent",
+        sent_at: new Date().toISOString(),
+      });
+  }
+
   return jsonResponse({
     token_count: pushTokens.length,
     sent_count: sentCount,
@@ -98,6 +122,36 @@ function getSupabaseSecretKey(): string | undefined {
     return parsed.service_role ?? Object.values(parsed)[0];
   }
   return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+}
+
+function extractUserBearerToken(authorization: string): string {
+  const matches = authorization.matchAll(/Bearer\s+([^,\s]+)/gi);
+  const tokens = Array.from(matches, (match) => match[1]?.trim()).filter(Boolean) as string[];
+  for (let index = tokens.length - 1; index >= 0; index -= 1) {
+    if (tokens[index].split(".").length === 3) {
+      return tokens[index];
+    }
+  }
+  return tokens.at(-1) ?? "";
+}
+
+async function getUserByAccessToken(
+  supabaseUrl: string,
+  authKey: string,
+  accessToken: string,
+): Promise<AuthUser | Response> {
+  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: {
+      "authorization": `Bearer ${accessToken}`,
+      "apikey": authKey,
+    },
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    console.error("send-test-notification auth failed", response.status, body);
+    return jsonResponse({ error: "invalid authorization", detail: body }, 401);
+  }
+  return await response.json() as AuthUser;
 }
 
 async function sendFcmMessage(
