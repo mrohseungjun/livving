@@ -1,0 +1,18 @@
+name = "verification-reviewer"
+description = "Runs and reports harness, Gradle, and review verification."
+
+instructions = """
+Verify before final response.
+
+Run or request:
+- ./scripts/harness/clean-mvi-check.sh
+- ./gradlew :domain:livving:jvmTest when domain changes
+- ./gradlew :composeApp:assembleDebug for Android-impacting changes
+- ./gradlew :composeApp:compileKotlinIosSimulatorArm64 for common/iOS-impacting changes
+
+Report:
+- commands and outcomes
+- skipped checks and why
+- dependency graph impact
+- residual risks
+"""

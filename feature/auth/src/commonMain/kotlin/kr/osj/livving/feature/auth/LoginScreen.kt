@@ -18,15 +18,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kr.osj.livving.core.ui.LivvingCenterText
 import kr.osj.livving.core.ui.LivvingCoral
+import kr.osj.livving.core.ui.LivvingCoralSoft
+import kr.osj.livving.core.ui.LivvingDisabledSurface
+import kr.osj.livving.core.ui.LivvingKakao
 import kr.osj.livving.core.ui.LivvingLogo
 import kr.osj.livving.core.ui.LivvingMuted
+import kr.osj.livving.core.ui.LivvingSurface
 import kr.osj.livving.core.ui.LivvingText
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -69,14 +72,14 @@ fun LoginScreen(
             modifier = Modifier
                 .size(220.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFFFF1F7)),
+                .background(LivvingCoralSoft),
             contentAlignment = Alignment.Center,
         ) {
             Box(
                 modifier = Modifier
                     .size(112.dp)
                     .clip(RoundedCornerShape(32.dp))
-                    .background(Color.White),
+                    .background(LivvingSurface),
                 contentAlignment = Alignment.Center,
             ) {
                 Text("✓", color = LivvingCoral, fontSize = 56.sp, fontWeight = FontWeight.Black)
@@ -88,7 +91,7 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .height(56.dp)
                 .clip(RoundedCornerShape(18.dp))
-                .background(if (state.loading) Color(0xFFE5E5E5) else Color(0xFFFEE500))
+                .background(if (state.loading) LivvingDisabledSurface else LivvingKakao)
                 .clickable(enabled = !state.loading) {
                     viewModel.onIntent(LoginIntent.ClickKakao)
                 },
@@ -96,7 +99,7 @@ fun LoginScreen(
         ) {
             Text(
                 text = if (state.loading) "로그인 중..." else "카카오로 시작하기",
-                color = Color.Black,
+                color = LivvingText,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Black,
             )
@@ -115,7 +118,7 @@ fun LoginScreen(
         LivvingCenterText(
             text = "로그인 시 약관과 개인정보처리방침에 동의하게 됩니다.",
             fontSize = 11,
-            color = Color(0xFFA3A3A3),
+            color = LivvingMuted,
         )
     }
 }

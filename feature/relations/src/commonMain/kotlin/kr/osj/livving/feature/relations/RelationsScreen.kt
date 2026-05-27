@@ -16,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -274,7 +273,7 @@ private fun WatchingRow(
             Column(Modifier.weight(1f)) {
                 Text(user.name, fontSize = 20.sp, fontWeight = FontWeight.Black)
                 Text(user.text, color = color, fontWeight = FontWeight.Bold)
-                Text("마감 $deadline · 알림 $alertAt", color = Color(0xFFA3A3A3), fontSize = 12.sp)
+                Text("마감 $deadline · 알림 $alertAt", color = LivvingMuted, fontSize = 12.sp)
             }
             Text(
                 text = if (user.phoneNumber != null) "전화" else "번호 없음",

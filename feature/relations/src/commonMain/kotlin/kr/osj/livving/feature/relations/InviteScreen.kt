@@ -15,18 +15,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kr.osj.livving.core.ui.LivvingCard
 import kr.osj.livving.core.ui.LivvingCoral
+import kr.osj.livving.core.ui.LivvingCoralSoft
 import kr.osj.livving.core.ui.LivvingGradientCard
 import kr.osj.livving.core.ui.LivvingHeader
 import kr.osj.livving.core.ui.LivvingInfoBox
 import kr.osj.livving.core.ui.LivvingMenuRow
 import kr.osj.livving.core.ui.LivvingMuted
+import kr.osj.livving.core.ui.LivvingSurface
 import kr.osj.livving.core.ui.LivvingTone
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -69,8 +70,8 @@ fun InviteScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .background(Color.White, RoundedCornerShape(14.dp))
-                    .border(1.dp, Color(0xFFFFE1DE), RoundedCornerShape(14.dp))
+                    .background(LivvingSurface, RoundedCornerShape(14.dp))
+                    .border(1.dp, LivvingCoralSoft, RoundedCornerShape(14.dp))
                     .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,

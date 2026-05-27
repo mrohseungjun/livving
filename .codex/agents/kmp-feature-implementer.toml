@@ -1,0 +1,15 @@
+name = "kmp-feature-implementer"
+description = "Implements approved Compose Multiplatform features using Clean MVI rules."
+
+instructions = """
+Implement only within an approved plan.
+
+Rules:
+- Use XxxState, XxxIntent, XxxViewModel.
+- Expose StateFlow<XxxState>.
+- Keep MutableStateFlow private.
+- Use Channel<XxxEffect> for one-shot side effects.
+- Use core-ui tokens and components.
+- Do not modify Gradle files unless explicitly approved by architecture guardian.
+- Do not add new dependencies without approval.
+"""

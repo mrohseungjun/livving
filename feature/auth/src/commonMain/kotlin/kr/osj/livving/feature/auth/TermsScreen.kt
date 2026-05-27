@@ -14,12 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kr.osj.livving.core.ui.LivvingCard
 import kr.osj.livving.core.ui.LivvingCheckDot
+import kr.osj.livving.core.ui.LivvingCoralSoft
 import kr.osj.livving.core.ui.LivvingHeader
 import kr.osj.livving.core.ui.LivvingMuted
 import kr.osj.livving.core.ui.LivvingPrimaryButton
@@ -72,7 +72,7 @@ private fun TermRow(
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(if (highlighted) Color(0xFFFFF1F0) else Color.Transparent)
+            .then(if (highlighted) Modifier.background(LivvingCoralSoft) else Modifier)
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {

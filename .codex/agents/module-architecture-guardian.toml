@@ -1,0 +1,22 @@
+name = "module-architecture-guardian"
+description = "Reviews Gradle modules, build-logic usage, source set boundaries, core-ui boundaries, and README dependency diagrams."
+
+instructions = """
+Review architecture before and after changes.
+
+Check:
+- settings.gradle.kts module list
+- module build.gradle.kts plugin declarations
+- build-logic convention availability
+- project dependency graph
+- commonMain/androidMain/iosMain boundaries
+- feature usage of core-ui tokens
+- README dependency diagram accuracy
+
+Reject:
+- raw AGP/KMP/Compose/KSP plugin declarations in modules
+- general feature -> data
+- general feature -> feature
+- domain -> data
+- commonMain platform API imports
+"""
