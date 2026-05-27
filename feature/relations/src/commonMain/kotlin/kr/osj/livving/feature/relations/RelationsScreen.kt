@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,16 +28,17 @@ import kr.osj.livving.core.ui.LivvingCard
 import kr.osj.livving.core.ui.LivvingCoral
 import kr.osj.livving.core.ui.LivvingDanger
 import kr.osj.livving.core.ui.LivvingHeader
-import kr.osj.livving.core.ui.LivvingInfoBox
 import kr.osj.livving.core.ui.LivvingMuted
-import kr.osj.livving.core.ui.LivvingPrimaryButton
+import kr.osj.livving.core.ui.LivvingSecondaryButton
 import kr.osj.livving.core.ui.LivvingSegmented
 import kr.osj.livving.core.ui.LivvingSuccess
+import kr.osj.livving.core.ui.LivvingSurface
 import kr.osj.livving.core.ui.LivvingTextField
 import kr.osj.livving.core.ui.LivvingTone
 import kr.osj.livving.core.ui.LivvingWarning
 import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RelationsScreen(
     selectedTab: RelationsTab,
@@ -85,18 +89,12 @@ fun RelationsScreen(
     }
 
     if (selectedTab == RelationsTab.MyGuardians) {
-        LivvingInfoBox(
-            text = "보호자 그룹 링크를 한 번 공유하고, 각 보호자가 앱에서 수락하면 연결됩니다.",
-            tone = LivvingTone.Neutral,
+        var showManualInviteSheet by remember { mutableStateOf(false) }
+        val manualInviteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ManualInviteTriggerRow(
+            onManualInviteClick = { showManualInviteSheet = true },
         )
         Spacer(Modifier.height(14.dp))
-        ManualInviteCodeCard(
-            value = manualInviteCode,
-            error = manualInviteError,
-            onValueChange = onManualInviteCodeChange,
-            onSubmit = onManualInviteSubmit,
-        )
-        Spacer(Modifier.height(18.dp))
         RelationSearchField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -114,6 +112,31 @@ fun RelationsScreen(
                 onClick = { onGuardianClick(guardian) },
             )
             Spacer(Modifier.height(14.dp))
+        }
+        if (showManualInviteSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showManualInviteSheet = false },
+                sheetState = manualInviteSheetState,
+                containerColor = LivvingSurface,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
+                ) {
+                    GuardianSummaryCard(
+                        acceptedCount = guardians.count { it.status == RelationGuardianStatus.Accepted },
+                        pendingCount = guardians.count { it.status == RelationGuardianStatus.Pending },
+                    )
+                    Spacer(Modifier.height(24.dp))
+                    ManualInviteCodeForm(
+                        value = manualInviteCode,
+                        error = manualInviteError,
+                        onValueChange = onManualInviteCodeChange,
+                        onSubmit = onManualInviteSubmit,
+                    )
+                }
+            }
         }
     } else {
         RelationSearchField(
@@ -175,34 +198,99 @@ private fun EmptySearchResult() {
 }
 
 @Composable
-private fun ManualInviteCodeCard(
+private fun ManualInviteTriggerRow(
+    onManualInviteClick: () -> Unit,
+) {
+    LivvingCard(Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onManualInviteClick)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            LivvingAvatar(name = "초", tone = LivvingTone.Purple)
+            Column(Modifier.weight(1f)) {
+                Text("초대코드 직접 입력", fontWeight = FontWeight.Black)
+                Text(
+                    text = "링크가 열리지 않을 때 사용해요.",
+                    color = LivvingMuted,
+                    fontSize = 13.sp,
+                )
+            }
+            Text(
+                text = "열기",
+                color = LivvingCoral,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Black,
+            )
+        }
+    }
+}
+
+@Composable
+private fun GuardianSummaryCard(
+    acceptedCount: Int,
+    pendingCount: Int,
+) {
+    LivvingCard(Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            LivvingAvatar(name = "연", tone = LivvingTone.Coral)
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "연결 ${acceptedCount}명 · 대기 ${pendingCount}명",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Black,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "보호자 그룹 링크를 공유하고 각 보호자가 수락하면 연결돼요.",
+                    color = LivvingMuted,
+                    fontSize = 13.sp,
+                    lineHeight = 19.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManualInviteCodeForm(
     value: String,
     error: String?,
     onValueChange: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
-    LivvingCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(18.dp)) {
-            Text("초대코드 직접 입력", fontSize = 17.sp, fontWeight = FontWeight.Black)
-            Spacer(Modifier.height(6.dp))
-            Text("링크가 열리지 않으면 초대코드나 링크 전체를 붙여넣으세요.", color = LivvingMuted, fontSize = 13.sp)
-            Spacer(Modifier.height(14.dp))
-            LivvingTextField(
-                value = value,
-                onValueChange = onValueChange,
-                placeholder = "예: livving://join/AB12CD 또는 AB12CD",
-            )
-            if (error != null) {
-                Spacer(Modifier.height(8.dp))
-                Text(error, color = LivvingDanger, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(12.dp))
-            LivvingPrimaryButton(
-                text = "초대 요청 확인하기",
-                enabled = value.isNotBlank(),
-                onClick = onSubmit,
-            )
+    Column(Modifier.fillMaxWidth()) {
+        Text("초대코드 직접 입력", fontSize = 22.sp, fontWeight = FontWeight.Black)
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = "카카오톡에서 링크가 열리지 않으면 초대코드나 링크 전체를 붙여넣으세요.",
+            color = LivvingMuted,
+            fontSize = 14.sp,
+            lineHeight = 21.sp,
+        )
+        Spacer(Modifier.height(18.dp))
+        LivvingTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = "예: livving://join/AB12CD 또는 AB12CD",
+        )
+        if (error != null) {
+            Spacer(Modifier.height(8.dp))
+            Text(error, color = LivvingDanger, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
+        Spacer(Modifier.height(12.dp))
+        LivvingSecondaryButton(
+            text = "초대 요청 확인하기",
+            enabled = value.isNotBlank(),
+            onClick = onSubmit,
+        )
     }
 }
 

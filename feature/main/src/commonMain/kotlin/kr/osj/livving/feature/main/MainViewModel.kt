@@ -90,7 +90,7 @@ class MainViewModel(
             MainIntent.PushTokenFetchFailed -> update {
                 it.copy(
                     pushTokenRegistering = false,
-                    pushTokenMessage = "이 기기의 푸시 토큰을 아직 받을 수 없어요. 알림 권한과 Google Play 서비스를 확인해 주세요.",
+                    pushTokenMessage = "이 기기의 푸시 토큰을 아직 받을 수 없어요. 알림 권한과 기기 푸시 설정을 확인해 주세요.",
                 )
             }
             MainIntent.LoadNotifications -> loadNotifications()
@@ -478,6 +478,9 @@ class MainViewModel(
                                 }
                             },
                         )
+                    }
+                    if (result.sentCount > 0) {
+                        loadNotifications()
                     }
                 }
                 .onFailure { throwable ->

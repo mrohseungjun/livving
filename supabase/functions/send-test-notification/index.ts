@@ -84,7 +84,7 @@ Deno.serve(async (request) => {
       .in("id", invalidTokenIds);
   }
 
-  if (sentCount > 0) {
+  if (pushTokens.length > 0) {
     await supabase
       .from("notification_events")
       .insert({
@@ -92,10 +92,12 @@ Deno.serve(async (request) => {
         actor_user_id: user.id,
         event_type: "test_push",
         title: "livving 테스트 알림",
-        body: `테스트 알림을 ${sentCount}개 기기에 보냈어요.`,
+        body: sentCount > 0
+          ? `테스트 알림을 ${sentCount}개 기기에 보냈어요.`
+          : `테스트 알림 전송에 실패했어요. ${results.find((result) => !result.ok)?.error?.slice(0, 120) ?? ""}`.trim(),
         related_user_id: user.id,
-        status: "sent",
-        sent_at: new Date().toISOString(),
+        status: sentCount > 0 ? "sent" : "failed",
+        sent_at: sentCount > 0 ? new Date().toISOString() : null,
       });
   }
 

@@ -49,14 +49,6 @@ fun InviteScreen(
         showLogo = false,
         onBack = onBackClick,
     )
-    LivvingGradientCard(Modifier.fillMaxWidth()) {
-        Column {
-            Text("현재 보호자 상태", color = LivvingMuted, fontSize = 13.sp)
-            Text("연결 ${acceptedCount}명 · 대기 ${pendingCount}명", fontSize = 28.sp, fontWeight = FontWeight.Black)
-            Spacer(Modifier.height(6.dp))
-            Text("같은 링크로 여러 명이 들어와도 각자 수락해야 연결됩니다.", color = LivvingMuted, fontSize = 12.sp)
-        }
-    }
     Spacer(Modifier.height(18.dp))
     LivvingMenuRow("그룹 초대 링크 생성", "보호자 여러 명이 같은 링크로 참여", "↗", onClick = onCreateInviteClick)
     Spacer(Modifier.height(14.dp))
