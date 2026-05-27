@@ -329,6 +329,11 @@ private fun MainEntryContainer(
                         "settings" to "설정",
                     ),
                     active = route.activeTab(),
+                    highlightedKeys = if (state.notifications.isNotEmpty()) {
+                        setOf("notifications")
+                    } else {
+                        emptySet()
+                    },
                     onClick = { tab ->
                         onReplace(
                             when (tab) {
@@ -427,7 +432,6 @@ private fun MainEntryContent(
             lastCheckedAt = formatLastCheckedAt(state.lastCheckedAt),
             late = state.status == CheckInStatus.Late,
             acceptedGuardianNames = state.guardians.filter { it.status == GuardianStatus.Accepted }.map { it.name },
-            onNotificationClick = { onNavigate(MainRoute.Notifications) },
             onCheckInClick = { onIntent(MainIntent.CompleteCheckIn) },
             onRelationsClick = { onReplace(MainRoute.Relations) },
             onHistoryClick = { onNavigate(MainRoute.History) },

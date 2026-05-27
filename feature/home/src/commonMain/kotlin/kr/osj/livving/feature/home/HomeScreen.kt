@@ -21,7 +21,6 @@ import kr.osj.livving.core.ui.LivvingCenterText
 import kr.osj.livving.core.ui.LivvingCheckInButton
 import kr.osj.livving.core.ui.LivvingCoral
 import kr.osj.livving.core.ui.LivvingHeader
-import kr.osj.livving.core.ui.LivvingIconCircle
 import kr.osj.livving.core.ui.LivvingInfoBox
 import kr.osj.livving.core.ui.LivvingMuted
 import kr.osj.livving.core.ui.LivvingPurple
@@ -40,7 +39,6 @@ fun HomeScreen(
     lastCheckedAt: String,
     late: Boolean,
     acceptedGuardianNames: List<String>,
-    onNotificationClick: () -> Unit,
     onCheckInClick: () -> Unit,
     onRelationsClick: () -> Unit,
     onHistoryClick: () -> Unit,
@@ -58,9 +56,6 @@ fun HomeScreen(
             checked -> "보호자 알림이 진행되지 않아요."
             late -> "$alertAt 전까지 확인해 주세요."
             else -> "${deadline}까지 안부를 확인해 주세요."
-        },
-        right = {
-            LivvingIconCircle("!", onClick = onNotificationClick)
         },
     )
     if (late) {

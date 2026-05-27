@@ -523,6 +523,7 @@ fun LivvingCheckDot(
 fun LivvingBottomBar(
     items: List<Pair<String, String>>,
     active: String,
+    highlightedKeys: Set<String> = emptySet(),
     onClick: (String) -> Unit,
 ) {
     NavigationBar(
@@ -538,10 +539,21 @@ fun LivvingBottomBar(
                 selected = selected,
                 onClick = { onClick(key) },
                 icon = {
-                    Icon(
-                        imageVector = key.toLivvingBottomIcon(),
-                        contentDescription = label,
-                    )
+                    Box {
+                        Icon(
+                            imageVector = key.toLivvingBottomIcon(),
+                            contentDescription = label,
+                        )
+                        if (key in highlightedKeys) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(LivvingDanger),
+                            )
+                        }
+                    }
                 },
                 label = {
                     Text(
