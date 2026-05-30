@@ -33,5 +33,6 @@ sealed interface MainIntent {
     data object ToggleRelationPush : MainIntent
     data object ToggleMissedPush : MainIntent
     data object SendTestNotification : MainIntent
+    data class SendCheckInRequest(val targetUserId: String, val message: String) : MainIntent
     data object Logout : MainIntent
 }

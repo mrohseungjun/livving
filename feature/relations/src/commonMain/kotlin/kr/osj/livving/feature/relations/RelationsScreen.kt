@@ -27,8 +27,11 @@ import kr.osj.livving.core.ui.LivvingBadge
 import kr.osj.livving.core.ui.LivvingCard
 import kr.osj.livving.core.ui.LivvingCoral
 import kr.osj.livving.core.ui.LivvingDanger
+import kr.osj.livving.core.ui.LivvingDropdownField
 import kr.osj.livving.core.ui.LivvingHeader
+import kr.osj.livving.core.ui.LivvingInfoBox
 import kr.osj.livving.core.ui.LivvingMuted
+import kr.osj.livving.core.ui.LivvingPrimaryButton
 import kr.osj.livving.core.ui.LivvingSecondaryButton
 import kr.osj.livving.core.ui.LivvingSegmented
 import kr.osj.livving.core.ui.LivvingSuccess
@@ -48,6 +51,8 @@ fun RelationsScreen(
     alertAt: String,
     manualInviteCode: String,
     manualInviteError: String?,
+    checkInRequestSendingUserId: String?,
+    checkInRequestMessage: String?,
     onMyGuardiansClick: () -> Unit,
     onWatchingClick: () -> Unit,
     onGuardianClick: (RelationGuardianUiModel) -> Unit,
@@ -55,6 +60,7 @@ fun RelationsScreen(
     onManualInviteSubmit: () -> Unit,
     onWatchingUserClick: (WatchingUserUiModel) -> Unit,
     onWatchingCallClick: (WatchingUserUiModel) -> Unit,
+    onCheckInRequestSend: (WatchingUserUiModel, String) -> Unit,
     viewModel: RelationsViewModel = koinViewModel(),
 ) {
     LivvingHeader(
@@ -139,6 +145,19 @@ fun RelationsScreen(
             }
         }
     } else {
+        var checkInRequestUser by remember { mutableStateOf<WatchingUserUiModel?>(null) }
+        val checkInRequestSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        if (checkInRequestMessage != null) {
+            LivvingInfoBox(
+                text = checkInRequestMessage,
+                tone = if ("실패" in checkInRequestMessage || "1분" in checkInRequestMessage) {
+                    LivvingTone.Orange
+                } else {
+                    LivvingTone.Green
+                },
+            )
+            Spacer(Modifier.height(14.dp))
+        }
         RelationSearchField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -154,10 +173,32 @@ fun RelationsScreen(
                 user = user,
                 deadline = deadline,
                 alertAt = alertAt,
-                onClick = { onWatchingUserClick(user) },
+                onClick = {
+                    if (user.state == WatchingState.Waiting) {
+                        checkInRequestUser = user
+                    } else {
+                        onWatchingUserClick(user)
+                    }
+                },
                 onCallClick = { onWatchingCallClick(user) },
             )
             Spacer(Modifier.height(14.dp))
+        }
+        checkInRequestUser?.let { user ->
+            ModalBottomSheet(
+                onDismissRequest = { checkInRequestUser = null },
+                sheetState = checkInRequestSheetState,
+                containerColor = LivvingSurface,
+            ) {
+                CheckInRequestSheet(
+                    user = user,
+                    sending = checkInRequestSendingUserId == user.userId,
+                    onSendClick = { message ->
+                        onCheckInRequestSend(user, message)
+                        checkInRequestUser = null
+                    },
+                )
+            }
         }
     }
 }
@@ -290,6 +331,84 @@ private fun ManualInviteCodeForm(
             text = "초대 요청 확인하기",
             enabled = value.isNotBlank(),
             onClick = onSubmit,
+        )
+    }
+}
+
+@Composable
+private fun CheckInRequestSheet(
+    user: WatchingUserUiModel,
+    sending: Boolean,
+    onSendClick: (String) -> Unit,
+) {
+    val directInputLabel = "직접 입력"
+    val presetMessages = remember {
+        listOf(
+            "안부 확인 부탁해요",
+            "오늘 안부 확인해줘",
+            "괜찮은지 확인하고 싶어요",
+            "시간 될 때 안부 버튼 눌러줘",
+            directInputLabel,
+        )
+    }
+    var selectedMessage by remember { mutableStateOf(presetMessages.first()) }
+    var customMessage by remember { mutableStateOf("") }
+    val finalMessage = if (selectedMessage == directInputLabel) customMessage.trim() else selectedMessage
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
+    ) {
+        LivvingCard(Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                LivvingAvatar(user.name, tone = LivvingTone.Orange)
+                Column(Modifier.weight(1f)) {
+                    Text(user.name, fontSize = 22.sp, fontWeight = FontWeight.Black)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "아직 오늘 안부 확인 전이에요.",
+                        color = LivvingWarning,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(22.dp))
+        Text("안부 확인 요청 보내기", fontSize = 22.sp, fontWeight = FontWeight.Black)
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = "너무 자주 울리지 않도록 같은 사람에게는 1분에 한 번만 보낼 수 있어요.",
+            color = LivvingMuted,
+            fontSize = 14.sp,
+            lineHeight = 21.sp,
+        )
+        Spacer(Modifier.height(18.dp))
+        LivvingDropdownField(
+            value = selectedMessage,
+            options = presetMessages,
+            label = "보낼 메시지",
+            onOptionClick = { selectedMessage = it },
+        )
+        if (selectedMessage == directInputLabel) {
+            Spacer(Modifier.height(12.dp))
+            LivvingTextField(
+                value = customMessage,
+                onValueChange = { customMessage = it.take(80) },
+                placeholder = "예: 걱정돼서 그래. 안부 확인 한번 눌러줘.",
+                singleLine = false,
+            )
+        }
+        Spacer(Modifier.height(18.dp))
+        LivvingPrimaryButton(
+            text = if (sending) "전송 중..." else "푸시 알림 보내기",
+            enabled = finalMessage.isNotBlank() && !sending,
+            onClick = { onSendClick(finalMessage) },
         )
     }
 }

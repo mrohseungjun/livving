@@ -48,6 +48,8 @@ data class MainState(
     val settingsMessage: String? = null,
     val testNotificationSending: Boolean = false,
     val testNotificationMessage: String? = null,
+    val checkInRequestSendingUserId: String? = null,
+    val checkInRequestMessage: String? = null,
 )
 
 data class MainPushToken(

@@ -485,6 +485,8 @@ private fun MainEntryContent(
                 alertAt = addLivvingMinutes(state.deadline, state.delayMinutes),
                 manualInviteCode = state.manualInviteCode,
                 manualInviteError = state.manualInviteError,
+                checkInRequestSendingUserId = state.checkInRequestSendingUserId,
+                checkInRequestMessage = state.checkInRequestMessage,
                 onMyGuardiansClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.MyGuardians)) },
                 onWatchingClick = { onIntent(MainIntent.SelectRelationTab(RelationsTab.Watching)) },
                 onGuardianClick = { guardian ->
@@ -509,6 +511,9 @@ private fun MainEntryContent(
                 },
                 onWatchingCallClick = { user ->
                     user.phoneNumber?.let(onCallPhone)
+                },
+                onCheckInRequestSend = { user, message ->
+                    onIntent(MainIntent.SendCheckInRequest(user.userId, message))
                 },
             )
         }
@@ -573,6 +578,7 @@ private fun MainEntryContent(
                         desc = notification.body,
                         tone = when (notification.type) {
                             LivvingNotificationType.MissedCheckIn -> kr.osj.livving.core.ui.LivvingTone.Red
+                            LivvingNotificationType.CheckInRequest -> kr.osj.livving.core.ui.LivvingTone.Orange
                             LivvingNotificationType.GuardianRequest -> kr.osj.livving.core.ui.LivvingTone.Purple
                             LivvingNotificationType.RelationAccepted -> kr.osj.livving.core.ui.LivvingTone.Green
                             LivvingNotificationType.TestPush -> kr.osj.livving.core.ui.LivvingTone.Coral

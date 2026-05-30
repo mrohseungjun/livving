@@ -43,6 +43,7 @@ val mainFeatureModule = module {
             getNotificationsUseCase = get(),
             markNotificationReadUseCase = get(),
             sendTestNotificationUseCase = get(),
+            sendCheckInRequestUseCase = get(),
             logoutUseCase = get(),
         )
     }

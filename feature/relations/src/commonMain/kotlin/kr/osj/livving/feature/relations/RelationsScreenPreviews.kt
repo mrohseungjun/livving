@@ -18,6 +18,8 @@ private fun RelationsMyGuardiansScreenPreview() {
                 alertAt = "08:35",
                 manualInviteCode = "7f25ea22fc136b6c",
                 manualInviteError = null,
+                checkInRequestSendingUserId = null,
+                checkInRequestMessage = null,
                 onMyGuardiansClick = {},
                 onWatchingClick = {},
                 onGuardianClick = {},
@@ -25,6 +27,7 @@ private fun RelationsMyGuardiansScreenPreview() {
                 onManualInviteSubmit = {},
                 onWatchingUserClick = {},
                 onWatchingCallClick = {},
+                onCheckInRequestSend = { _, _ -> },
                 viewModel = RelationsViewModel(),
             )
         }
@@ -44,6 +47,8 @@ private fun RelationsWatchingScreenPreview() {
                 alertAt = "08:35",
                 manualInviteCode = "",
                 manualInviteError = null,
+                checkInRequestSendingUserId = null,
+                checkInRequestMessage = "안부 확인 요청을 보냈어요.",
                 onMyGuardiansClick = {},
                 onWatchingClick = {},
                 onGuardianClick = {},
@@ -51,6 +56,7 @@ private fun RelationsWatchingScreenPreview() {
                 onManualInviteSubmit = {},
                 onWatchingUserClick = {},
                 onWatchingCallClick = {},
+                onCheckInRequestSend = { _, _ -> },
                 viewModel = RelationsViewModel(),
             )
         }

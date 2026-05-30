@@ -37,6 +37,22 @@ data class TestNotificationResultDto(
 )
 
 @Serializable
+data class SendCheckInRequestDto(
+    @SerialName("target_user_id") val targetUserId: String,
+    val message: String,
+)
+
+@Serializable
+data class CheckInRequestResultDto(
+    @SerialName("sent_count") val sentCount: Int = 0,
+    @SerialName("failed_count") val failedCount: Int = 0,
+    val throttled: Boolean = false,
+    @SerialName("retry_after_seconds") val retryAfterSeconds: Int? = null,
+    @SerialName("already_checked_in") val alreadyCheckedIn: Boolean = false,
+    @SerialName("first_error") val firstError: String? = null,
+)
+
+@Serializable
 data class NotificationEventDto(
     val id: String,
     @SerialName("recipient_user_id") val recipientUserId: String,

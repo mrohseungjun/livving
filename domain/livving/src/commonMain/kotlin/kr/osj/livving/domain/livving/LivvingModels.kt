@@ -49,6 +49,15 @@ data class TestNotificationResult(
     val firstError: String? = null,
 )
 
+data class CheckInRequestResult(
+    val sentCount: Int,
+    val failedCount: Int,
+    val throttled: Boolean = false,
+    val retryAfterSeconds: Int? = null,
+    val alreadyCheckedIn: Boolean = false,
+    val firstError: String? = null,
+)
+
 data class LivvingNotification(
     val id: String,
     val type: LivvingNotificationType,
@@ -73,6 +82,7 @@ enum class GuardianStatus {
 
 enum class LivvingNotificationType {
     MissedCheckIn,
+    CheckInRequest,
     GuardianRequest,
     RelationAccepted,
     TestPush,

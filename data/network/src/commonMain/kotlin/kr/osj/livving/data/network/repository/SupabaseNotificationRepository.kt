@@ -9,14 +9,18 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import kr.osj.livving.core.platform.livvingLogD
 import kr.osj.livving.data.network.NetworkConfig
+import kr.osj.livving.data.network.dto.CheckInRequestResultDto
 import kr.osj.livving.data.network.dto.NotificationEventDto
 import kr.osj.livving.data.network.dto.PushTokenDto
+import kr.osj.livving.data.network.dto.SendCheckInRequestDto
 import kr.osj.livving.data.network.dto.TestNotificationResultDto
+import kr.osj.livving.domain.livving.CheckInRequestResult
 import kr.osj.livving.domain.livving.LivvingNotification
 import kr.osj.livving.domain.livving.LivvingNotificationType
 import kr.osj.livving.domain.livving.PushTokenRegistration
@@ -125,11 +129,65 @@ class SupabaseNotificationRepository(
         )
     }
 
+    override suspend fun sendCheckInRequest(
+        guardianUserId: String,
+        targetUserId: String,
+        message: String,
+    ): CheckInRequestResult {
+        check(guardianUserId.isNotBlank()) { "Guardian user id is required to send a check-in request" }
+        check(targetUserId.isNotBlank()) { "Target user id is required to send a check-in request" }
+        check(message.isNotBlank()) { "Message is required to send a check-in request" }
+        client.auth.awaitInitialization()
+        runCatching {
+            client.auth.refreshCurrentSession()
+        }.onSuccess {
+            livvingLogD("LivvingCheckInRequest", "session refreshed guardianUserId=$guardianUserId targetUserId=$targetUserId")
+        }.onFailure { throwable ->
+            livvingLogD("LivvingCheckInRequest", "session refresh skipped or failed ${throwable.message}")
+        }
+        val accessToken = client.auth.currentAccessTokenOrNull()
+            ?: error("Supabase session is required to send a check-in request")
+        val response = httpClient.post {
+            expectSuccess = false
+            url("${config.supabaseClientUrl}/functions/v1/send-check-in-request")
+            headers {
+                remove(HttpHeaders.Authorization)
+                append(HttpHeaders.Authorization, "Bearer $accessToken")
+                remove("apikey")
+                append("apikey", config.supabaseAnonKey)
+            }
+            setBody(
+                SendCheckInRequestDto(
+                    targetUserId = targetUserId,
+                    message = message,
+                ),
+            )
+        }
+        val rawBody = response.bodyAsText()
+        livvingLogD(
+            tag = "LivvingCheckInRequest",
+            message = "response status=${response.status.value} body=$rawBody",
+        )
+        if (response.status.value !in 200..299) {
+            error("Check-in request failed: status=${response.status.value}, body=$rawBody")
+        }
+        val dto = json.decodeFromString<CheckInRequestResultDto>(rawBody)
+        return CheckInRequestResult(
+            sentCount = dto.sentCount,
+            failedCount = dto.failedCount,
+            throttled = dto.throttled,
+            retryAfterSeconds = dto.retryAfterSeconds,
+            alreadyCheckedIn = dto.alreadyCheckedIn,
+            firstError = dto.firstError,
+        )
+    }
+
     private fun NotificationEventDto.toDomain(): LivvingNotification {
         return LivvingNotification(
             id = id,
             type = when (eventType) {
                 "missed_check_in" -> LivvingNotificationType.MissedCheckIn
+                "check_in_request" -> LivvingNotificationType.CheckInRequest
                 "guardian_request" -> LivvingNotificationType.GuardianRequest
                 "relation_accepted" -> LivvingNotificationType.RelationAccepted
                 "test_push" -> LivvingNotificationType.TestPush

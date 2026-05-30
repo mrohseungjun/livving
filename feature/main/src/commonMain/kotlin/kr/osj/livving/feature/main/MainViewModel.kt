@@ -26,6 +26,7 @@ import kr.osj.livving.domain.livving.usecase.MarkNotificationReadUseCase
 import kr.osj.livving.domain.livving.usecase.RegisterPushTokenUseCase
 import kr.osj.livving.domain.livving.usecase.SaveInitialUserSettingsUseCase
 import kr.osj.livving.domain.livving.usecase.SavePhoneContactUseCase
+import kr.osj.livving.domain.livving.usecase.SendCheckInRequestUseCase
 import kr.osj.livving.domain.livving.usecase.SendTestNotificationUseCase
 import kr.osj.livving.domain.livving.usecase.ToggleLateCheckInUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +54,7 @@ class MainViewModel(
     private val getNotificationsUseCase: GetNotificationsUseCase,
     private val markNotificationReadUseCase: MarkNotificationReadUseCase,
     private val sendTestNotificationUseCase: SendTestNotificationUseCase,
+    private val sendCheckInRequestUseCase: SendCheckInRequestUseCase,
     private val logoutUseCase: LogoutUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MainState())
@@ -109,6 +111,7 @@ class MainViewModel(
             MainIntent.ToggleRelationPush -> toggleAndSaveSettings { it.copy(relationPushEnabled = !it.relationPushEnabled) }
             MainIntent.ToggleMissedPush -> toggleAndSaveSettings { it.copy(missedPushEnabled = !it.missedPushEnabled) }
             MainIntent.SendTestNotification -> sendTestNotification()
+            is MainIntent.SendCheckInRequest -> sendCheckInRequest(intent.targetUserId, intent.message)
             MainIntent.Logout -> logout()
         }
     }
@@ -495,6 +498,47 @@ class MainViewModel(
                         )
                     }
                 }
+        }
+    }
+
+    private fun sendCheckInRequest(targetUserId: String, message: String) {
+        viewModelScope.launch {
+            val guardianUserId = _state.value.currentUser?.id ?: return@launch
+            update {
+                it.copy(
+                    checkInRequestSendingUserId = targetUserId,
+                    checkInRequestMessage = null,
+                )
+            }
+            runCatching {
+                sendCheckInRequestUseCase(
+                    guardianUserId = guardianUserId,
+                    targetUserId = targetUserId,
+                    message = message,
+                )
+            }.onSuccess { result ->
+                update {
+                    it.copy(
+                        checkInRequestSendingUserId = null,
+                        checkInRequestMessage = when {
+                            result.alreadyCheckedIn -> "이미 오늘 안부 확인을 완료했어요."
+                            result.throttled -> {
+                                val seconds = result.retryAfterSeconds ?: 60
+                                "안부 확인 요청은 1분에 한 번만 보낼 수 있어요. ${seconds}초 후 다시 시도해 주세요."
+                            }
+                            result.sentCount > 0 -> "안부 확인 요청을 보냈어요."
+                            else -> "요청 알림을 보낼 수 있는 기기가 없어요."
+                        },
+                    )
+                }
+            }.onFailure { throwable ->
+                update {
+                    it.copy(
+                        checkInRequestSendingUserId = null,
+                        checkInRequestMessage = "안부 확인 요청 전송에 실패했어요. ${throwable.message.orEmpty().take(80)}",
+                    )
+                }
+            }
         }
     }
 
