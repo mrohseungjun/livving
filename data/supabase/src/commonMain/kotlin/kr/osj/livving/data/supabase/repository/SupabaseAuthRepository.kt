@@ -1,4 +1,4 @@
-package kr.osj.livving.data.network.repository
+package kr.osj.livving.data.supabase.repository
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -6,9 +6,9 @@ import io.github.jan.supabase.auth.providers.Kakao
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
-import kr.osj.livving.data.network.dto.ProfileDto
-import kr.osj.livving.data.network.dto.UserContactSettingDto
-import kr.osj.livving.data.network.dto.UserSettingsDto
+import kr.osj.livving.data.supabase.dto.ProfileDto
+import kr.osj.livving.data.supabase.dto.UserContactSettingDto
+import kr.osj.livving.data.supabase.dto.UserSettingsDto
 import kr.osj.livving.domain.livving.AuthSession
 import kr.osj.livving.domain.livving.InitialUserSettings
 import kr.osj.livving.domain.livving.KakaoLoginResult

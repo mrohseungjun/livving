@@ -1,4 +1,4 @@
-package kr.osj.livving.data.network.repository
+package kr.osj.livving.data.supabase.repository
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -15,11 +15,11 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import kr.osj.livving.core.platform.livvingLogD
 import kr.osj.livving.data.network.NetworkConfig
-import kr.osj.livving.data.network.dto.CheckInRequestResultDto
-import kr.osj.livving.data.network.dto.NotificationEventDto
-import kr.osj.livving.data.network.dto.PushTokenDto
-import kr.osj.livving.data.network.dto.SendCheckInRequestDto
-import kr.osj.livving.data.network.dto.TestNotificationResultDto
+import kr.osj.livving.data.supabase.dto.CheckInRequestResultDto
+import kr.osj.livving.data.supabase.dto.NotificationEventDto
+import kr.osj.livving.data.supabase.dto.PushTokenDto
+import kr.osj.livving.data.supabase.dto.SendCheckInRequestDto
+import kr.osj.livving.data.supabase.dto.TestNotificationResultDto
 import kr.osj.livving.domain.livving.CheckInRequestResult
 import kr.osj.livving.domain.livving.LivvingNotification
 import kr.osj.livving.domain.livving.LivvingNotificationType

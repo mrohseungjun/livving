@@ -1,4 +1,4 @@
-package kr.osj.livving.data.network.dto
+package kr.osj.livving.data.supabase.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

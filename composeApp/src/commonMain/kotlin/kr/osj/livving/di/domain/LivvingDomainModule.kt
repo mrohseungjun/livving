@@ -1,4 +1,4 @@
-package kr.osj.livving.domain.livving.di
+package kr.osj.livving.di
 
 import kr.osj.livving.domain.livving.usecase.AcceptGuardianInviteUseCase
 import kr.osj.livving.domain.livving.usecase.CompleteCheckInUseCase

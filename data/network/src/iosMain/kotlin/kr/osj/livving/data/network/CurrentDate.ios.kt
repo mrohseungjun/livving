@@ -5,7 +5,7 @@ import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSLocale
 import platform.Foundation.currentLocale
 
-internal actual fun currentDateIso(): String {
+actual fun currentDateIso(): String {
     val formatter = NSDateFormatter()
     formatter.locale = NSLocale.currentLocale
     formatter.dateFormat = "yyyy-MM-dd"

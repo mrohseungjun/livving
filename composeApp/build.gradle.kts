@@ -12,6 +12,7 @@ kotlin {
             implementation(projects.core.platform)
             implementation(projects.core.ui)
             implementation(projects.data.network)
+            implementation(projects.data.supabase)
             implementation(projects.domain.livving)
             implementation(projects.feature.main)
         }

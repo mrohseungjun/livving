@@ -1,14 +1,14 @@
-package kr.osj.livving.data.network.repository
+package kr.osj.livving.data.supabase.repository
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
-import kr.osj.livving.data.network.dto.GuardianRelationCreateDto
-import kr.osj.livving.data.network.dto.GuardianRelationDto
-import kr.osj.livving.data.network.dto.InviteLinkDto
-import kr.osj.livving.data.network.dto.InviteRequestDto
-import kr.osj.livving.data.network.dto.ProfileDto
-import kr.osj.livving.data.network.dto.UserContactSettingDto
+import kr.osj.livving.data.supabase.dto.GuardianRelationCreateDto
+import kr.osj.livving.data.supabase.dto.GuardianRelationDto
+import kr.osj.livving.data.supabase.dto.InviteLinkDto
+import kr.osj.livving.data.supabase.dto.InviteRequestDto
+import kr.osj.livving.data.supabase.dto.ProfileDto
+import kr.osj.livving.data.supabase.dto.UserContactSettingDto
 import kr.osj.livving.domain.livving.Guardian
 import kr.osj.livving.domain.livving.GuardianInvite
 import kr.osj.livving.domain.livving.GuardianInviteRequest

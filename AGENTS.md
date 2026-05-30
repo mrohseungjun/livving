@@ -16,7 +16,8 @@
 
 - Gradle 모듈 의존성은 순환 없는 DAG여야 합니다.
 - `domain:livving`은 domain model, repository contract, usecase를 소유합니다.
-- `data:network`는 `domain:livving` repository contract를 구현합니다.
+- `data:network`는 Ktor/Ktorfit/Supabase client, network config, HTTP engine 같은 remote 통신 기반을 소유합니다.
+- `data:supabase`는 `domain:livving` repository contract를 구현하고 Supabase DTO/remote mapping을 소유합니다.
 - 일반 screen feature는 `core:ui`와 필요한 경우 `domain:livving`에만 의존합니다.
 - `:feature:main`은 현재 Navigation 3 앱 셸이므로 screen feature 조립 의존을 예외로 허용합니다.
 - `:feature:main` 외 일반 feature는 다른 feature 또는 data 모듈을 직접 참조하지 않습니다.

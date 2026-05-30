@@ -1,10 +1,10 @@
-package kr.osj.livving.data.network.repository
+package kr.osj.livving.data.supabase.repository
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import kr.osj.livving.data.network.currentDateIso
-import kr.osj.livving.data.network.dto.CheckInDto
+import kr.osj.livving.data.supabase.dto.CheckInDto
 import kr.osj.livving.domain.livving.CheckInCompletion
 import kr.osj.livving.domain.livving.CheckInStatus
 import kr.osj.livving.domain.livving.repository.CheckInRepository

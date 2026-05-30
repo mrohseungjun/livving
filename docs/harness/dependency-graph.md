@@ -7,11 +7,16 @@ composeApp
  ├─ core:platform
  ├─ core:ui
  ├─ data:network
+ ├─ data:supabase
  ├─ domain:livving
  └─ feature:main
 
 data:network
+ └─ external Ktor/Ktorfit/Supabase libraries
+
+data:supabase
  ├─ core:platform
+ ├─ data:network
  └─ domain:livving
 
 feature:main
